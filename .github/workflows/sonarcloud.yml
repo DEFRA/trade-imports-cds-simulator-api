@@ -1,4 +1,4 @@
-name: Run SonarCloud coverage scan
+name: CDP SonarCloud Scan
 
 on:
   workflow_call:
@@ -7,10 +7,10 @@ permissions:
   id-token: write
   contents: read
   pull-requests: write
+  packages: read
 
 jobs:
   build:
-    if: github.run_number != 1
     name: CDP SonarCloud coverage scan
     runs-on: ubuntu-latest
     steps:
@@ -20,14 +20,14 @@ jobs:
           java-version: 17
           distribution: "zulu"
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Set up .NET 8.0
-        uses: actions/setup-dotnet@v3
+      - name: Set up .NET 9.0
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            8.0
+            9.0
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
@@ -64,7 +64,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          ./.sonar/scanner/dotnet-sonarscanner begin /k:"DEFRA_cdp-dotnet-backend-template" /o:"defra" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"DEFRA_trade-imports-reporting-api" /o:"defra" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+          dotnet nuget remove source defra
+          dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name defra "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
           dotnet build --no-incremental
-          ./.sonar/coverage/dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+          ./.sonar/coverage/dotnet-coverage collect "dotnet test tests/Api.Tests" -f xml -o "coverage.xml"
           ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
