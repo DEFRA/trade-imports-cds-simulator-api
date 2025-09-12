@@ -1,110 +1,99 @@
-# Trade Imports Reporting API
+# trade-imports-cds-simulator-api
 
-The Trade Imports Cds Simulator is a .NET application.
+Core delivery C# ASP.NET backend template.
 
-* [Prerequisites](#prerequisites)
-* [Setup Process](#setup-process)
-* [How to run in development](#how-to-run-in-development)
-* [How to run Tests](#how-to-run-tests)
+* [Install MongoDB](#install-mongodb)
+* [Inspect MongoDB](#inspect-mongodb)
+* [Testing](#testing)
 * [Running](#running)
-* [Deploying](#deploying)
-* [SonarCloud](#sonarCloud)
 * [Dependabot](#dependabot)
-* [Tracing](#tracing)
-* [Licence Information](#licence-information)
-* [About the Licence](#about-the-licence)
 
-### Prerequisites
 
-- .NET 9 SDK
-- Docker
-  - localstack - used for local queuing
-  - wiremock - used for mocking out http requests
+### Docker Compose
 
-### Setup Process
+A Docker Compose template is in [compose.yml](compose.yml).
 
-- Install the .NET 9 SDK
-- Install Docker
-  - Run the following Docker Compose to set up locally running queues for testing
-  ```bash
-  docker compose -f compose.yml up -d
-  ```
+A local environment with:
 
-### How to run in development
-
-Run the application with the command:
+- Localstack for AWS services (S3, SQS)
+- Redis
+- MongoDB
+- This service.
+- A commented out frontend example.
 
 ```bash
-dotnet run --project src/CdsSimulator/CdsSimulator.csproj
+docker compose up --build -d
 ```
 
-### How to run Tests
+A more extensive setup is available in [github.com/DEFRA/cdp-local-environment](https://github.com/DEFRA/cdp-local-environment)
 
-Run the unit tests with:
+### MongoDB
 
+#### MongoDB via Docker
+
+See above.
+
+```
+docker compose up -d mongodb
+```
+
+#### MongoDB locally
+
+Alternatively install MongoDB locally:
+
+- Install [MongoDB](https://www.mongodb.com/docs/manual/tutorial/#installation) on your local machine
+- Start MongoDB:
 ```bash
-dotnet test --filter "Category!=IntegrationTest"
+sudo mongod --dbpath ~/mongodb-cdp
 ```
-Run the integration tests with:
+
+#### MongoDB in CDP environments
+
+In CDP environments a MongoDB instance is already set up
+and the credentials exposed as enviromment variables.
+
+
+### Inspect MongoDB
+
+To inspect the Database and Collections locally:
 ```bash
-dotnet test --filter "Category=IntegrationTest"
+mongosh
 ```
-Run all tests with:
+
+You can use the CDP Terminal to access the environments' MongoDB.
+
+### Testing
+
+Run the tests with:
+
+Tests run by running a full `WebApplication` backed by [Ephemeral MongoDB](https://github.com/asimmon/ephemeral-mongo).
+Tests do not use mocking of any sort and read and write from the in-memory database.
+
 ```bash
 dotnet test
+````
+
+### Running
+
+Run CDP-Deployments application:
+```bash
+dotnet run --project TradeImportsCdsSimulatorApi --launch-profile Development
 ```
-
-#### Unit Tests
-
-Some unit tests may run an in memory instance service.
-
-#### Integration Tests
-
-Integration tests run against the built docker image.
-
-Because these use the built docker image, the `appsettings.json` will be used, should any values need to be overridden, then they can be injected as an environment variable via the `compose.yml`
-
-### Deploying
-
-Before deploying via CDP set any config needed in the appropriate `cdp` app settings JSON in the Api project root, otherwise add as a secret in the CDP portal.
 
 ### SonarCloud
 
-See the configured project in SonarCloud.
+Example SonarCloud configuration are available in the GitHub Action workflows.
 
 ### Dependabot
 
-We are using dependabot.
+We have added an example dependabot configuration file to the repository. You can enable it by renaming
+the [.github/example.dependabot.yml](.github/example.dependabot.yml) to `.github/dependabot.yml`
 
-Connection to the private Defra nuget packages is provided by a user generated PAT stored in this repo's settings - /settings/secrets/dependabot - see `DEPENDABOT_PAT` secret.
-
-The PAT is a classic token and needs permissions of `read:packages`.
-
-At time of writing, using PAT is the only way to make Dependabot work with private nuget feeds.
-
-Should the user who owns the PAT leave Defra then another user on the team should create a new PAT and update the settings in this repo.
-
-
-### Tracing
-
-The out of the box CDP template doesn't provide any example of how to handle tracing for non Http communication.
-
-This service expects the `trace.id` to be a header on the message.
-
-Getting the `trace.id` header is achieved via a SMB `TraceContextInterceptor`.
-
-Making sure that `trace.id` is then used in log messages is achieved via `TraceContextEnricher`.
-
-Setting the `trace.id` header on a HTTP request is achieved via Header Propagation.
-
-### Licence Information
-
-THIS INFORMATION IS LICENSED UNDER THE CONDITIONS OF THE OPEN GOVERNMENT LICENCE found at:
-
-<http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3>
 
 ### About the licence
 
-The Open Government Licence (OGL) was developed by the Controller of Her Majesty's Stationery Office (HMSO) to enable information providers in the public sector to license the use and re-use of their information under a common open licence.
+The Open Government Licence (OGL) was developed by the Controller of Her Majesty's Stationery Office (HMSO) to enable
+information providers in the public sector to license the use and re-use of their information under a common open
+licence.
 
 It is designed to encourage use and re-use of information freely and flexibly, with only a few conditions.
