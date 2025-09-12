@@ -27,7 +27,7 @@ COPY tests/Testing/Testing.csproj tests/Testing/Testing.csproj
 COPY tests/TestFixtures/TestFixtures.csproj tests/TestFixtures/TestFixtures.csproj
 COPY tests/CdsSimulator.Tests/CdsSimulator.Tests.csproj tests/CdsSimulator.Tests/CdsSimulator.Tests.csproj
 COPY tests/CdsSimulator.IntegrationTests/CdsSimulator.IntegrationTests.csproj tests/CdsSimulator.IntegrationTests/CdsSimulator.IntegrationTests.csproj
-COPY Defra.TradeImportsCdsSimulator.sln Defra.TradeImportsCdsSimulator.sln
+COPY Defra.TradeImportsCdsSimulatorApi.sln Defra.TradeImportsCdsSimulatorApi.sln
 COPY Directory.Build.props Directory.Build.props
 
 COPY NuGet.config NuGet.config
