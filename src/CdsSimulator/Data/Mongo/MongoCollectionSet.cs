@@ -1,11 +1,11 @@
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-using Defra.TradeImportsCdsSimulator.Data.Entities;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
 
 namespace Defra.TradeImportsCdsSimulator.Data.Mongo;
 
+[ExcludeFromCodeCoverage]
 public class MongoCollectionSet<T>(MongoDbContext dbContext, string collectionName = null!) : IMongoCollectionSet<T>
 {
     private readonly List<T> _entitiesToInsert = [];
