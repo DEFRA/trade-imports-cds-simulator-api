@@ -1,5 +1,7 @@
 using Defra.TradeImportsCdsSimulator.Authentication;
 using Defra.TradeImportsCdsSimulator.Data.Extensions;
+using Defra.TradeImportsCdsSimulator.Endpoints.Decisions;
+using Defra.TradeImportsCdsSimulator.Endpoints.OutboundErrors;
 using Defra.TradeImportsCdsSimulator.Extensions;
 using Defra.TradeImportsCdsSimulator.Health;
 using Defra.TradeImportsCdsSimulator.Metrics;
@@ -73,6 +75,8 @@ static WebApplication BuildWebApplication(WebApplicationBuilder builder)
     app.UseStatusCodePages();
     app.UseHeaderPropagation();
     app.UseMiddleware<MetricsMiddleware>();
+    app.MapDecisionEndpoints();
+    app.MapErrorEndpoints();
     app.UseExceptionHandler(
         new ExceptionHandlerOptions
         {

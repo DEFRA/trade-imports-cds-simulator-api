@@ -10,24 +10,8 @@ public class MongoIndexService(IMongoDatabase database, ILogger<MongoIndexServic
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await CreateIndex(
-            "UpdatedIdx",
-            Builders<RawMessageEntity>.IndexKeys.Ascending(x => x.Updated),
-            cancellationToken: cancellationToken
-        );
-
-        await CreateIndex(
-            "UpdatesIdx",
-            Builders<RawMessageEntity>
-                .IndexKeys.Ascending(x => x.Updated)
-                .Ascending(x => x.ResourceId)
-                .Ascending(x => x.ResourceType)
-                .Ascending(x => x.MessageId),
-            cancellationToken: cancellationToken
-        );
-
-        await CreateTtlIndex(
-            "ExpiresAtTtlIdx",
-            Builders<RawMessageEntity>.IndexKeys.Ascending(x => x.ExpiresAt),
+            "DecisionNotificationIdx",
+            Builders<DecisionNotification>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.Timestamp),
             cancellationToken: cancellationToken
         );
     }
@@ -56,40 +40,12 @@ public class MongoIndexService(IMongoDatabase database, ILogger<MongoIndexServic
                 }
             );
             await database
-                .GetCollection<T>(typeof(T).DataEntityName())
+                .GetCollection<T>(typeof(T).Name)
                 .Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Failed to Create index {Name} on {Collection}", name, typeof(T).DataEntityName());
-        }
-    }
-
-    private async Task CreateTtlIndex<T>(
-        string name,
-        IndexKeysDefinition<T> keys,
-        TimeSpan? expireAfter = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        try
-        {
-            var indexModel = new CreateIndexModel<T>(
-                keys,
-                new CreateIndexOptions
-                {
-                    Name = name,
-                    Background = true,
-                    ExpireAfter = expireAfter ?? TimeSpan.Zero,
-                }
-            );
-            await database
-                .GetCollection<T>(typeof(T).DataEntityName())
-                .Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to Create TTL index {Name} on {Collection}", name, typeof(T).DataEntityName());
+            logger.LogError(e, "Failed to Create index {Name} on {Collection}", name, typeof(T).Name);
         }
     }
 }

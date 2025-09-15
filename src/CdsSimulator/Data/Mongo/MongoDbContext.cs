@@ -14,37 +14,22 @@ public class MongoDbContext : IDbContext
         _logger = logger;
 
         Database = database;
-        RawMessages = new MongoCollectionSet<RawMessageEntity>(this);
+        DecisionNotifications = new MongoCollectionSet<DecisionNotification>(this);
+        ErrorNotifications = new MongoCollectionSet<ErrorNotification>(this);
     }
 
     internal IMongoDatabase Database { get; }
-    internal MongoDbTransaction? ActiveTransaction { get; private set; }
 
-    public IMongoCollectionSet<RawMessageEntity> RawMessages { get; }
+    public IMongoCollectionSet<DecisionNotification> DecisionNotifications { get; }
 
-    public async Task StartTransaction(CancellationToken cancellationToken)
-    {
-        var session = await Database.Client.StartSessionAsync(cancellationToken: cancellationToken);
-        session.StartTransaction();
+    public IMongoCollectionSet<ErrorNotification> ErrorNotifications { get; }
 
-        ActiveTransaction = new MongoDbTransaction(session);
-    }
-
-    public async Task CommitTransaction(CancellationToken cancellationToken)
-    {
-        if (ActiveTransaction is null)
-            throw new InvalidOperationException("No active transaction");
-
-        await ActiveTransaction.Commit(cancellationToken);
-
-        ActiveTransaction = null;
-    }
-
-    public async Task SaveChanges(CancellationToken cancellationToken)
+    public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await RawMessages.Save(cancellationToken);
+            await DecisionNotifications.Save(cancellationToken);
+            await ErrorNotifications.Save(cancellationToken);
         }
         catch (MongoCommandException mongoCommandException) when (mongoCommandException.Code == 112)
         {

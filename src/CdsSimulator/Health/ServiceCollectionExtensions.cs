@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using Defra.TradeImportsCdsSimulator.Configuration;
-using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 
 namespace Defra.TradeImportsCdsSimulator.Health;
 
@@ -9,7 +8,13 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddHealth(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddHealthChecks();
+        services
+            .AddHealthChecks()
+            .AddMongoDb(
+                provider => provider.GetRequiredService<IMongoDatabase>(),
+                timeout: TimeSpan.FromSeconds(10),
+                tags: [WebApplicationExtensions.Extended]
+            );
         return services;
     }
 }
