@@ -13,35 +13,7 @@ public static class EndpointRouteBuilderExtensions
 {
     public static void MapErrorEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("alvsclearance/errornotification/v1", PutError).RequireAuthorization(PolicyNames.Write);
         app.MapGet("error-notifications", GetErrors).RequireAuthorization(PolicyNames.Read);
-    }
-
-    [HttpPost]
-    private static async Task<IResult> PutError(
-        HttpContext context,
-        [FromServices] IDbContext dbContext,
-        CancellationToken cancellationToken
-    )
-    {
-        context.Request.EnableBuffering();
-
-        using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
-        var incoming = await reader.ReadToEndAsync(cancellationToken);
-
-        dbContext.ErrorNotifications.Insert(
-            new Notification
-            {
-                Mrn = incoming.GetMrn(),
-                Timestamp = DateTime.UtcNow,
-                Id = ObjectId.GenerateNewId().ToString(),
-                Xml = incoming.ToHtmlDecodedXml(),
-            }
-        );
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Results.Accepted();
     }
 
     [HttpGet]

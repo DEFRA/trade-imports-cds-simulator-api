@@ -5,7 +5,6 @@ using Defra.TradeImportsCdsSimulator.Extensions;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
-using MongoDB.Driver.Linq;
 
 namespace Defra.TradeImportsCdsSimulator.Endpoints.Decisions;
 
@@ -13,7 +12,7 @@ public static class EndpointRouteBuilderExtensions
 {
     public static void MapDecisionEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("alvsclearance/decisionnotification/v1", PutDecision).RequireAuthorization(PolicyNames.Write);
+        app.MapPost("ws/CDS/defra/alvsclearanceinbound/v1", PutDecision).RequireAuthorization(PolicyNames.Write);
         app.MapGet("decision-notifications", GetDecisions).RequireAuthorization(PolicyNames.Read);
     }
 
@@ -27,15 +26,29 @@ public static class EndpointRouteBuilderExtensions
         context.Request.EnableBuffering();
 
         using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
-        var incomingDecision = await reader.ReadToEndAsync(cancellationToken);
+        var incoming = await reader.ReadToEndAsync(cancellationToken);
+
+        string mrn;
+        if (incoming.IsErrorNotification())
+        {
+            mrn = incoming.GetErrorMrn();
+        }
+        else if (incoming.IsDecisionNotification())
+        {
+            mrn = incoming.GetDecisionMrn();
+        }
+        else
+        {
+            return Results.Problem("Unexpected XML", statusCode: 400);
+        }
 
         dbContext.DecisionNotifications.Insert(
             new Notification()
             {
-                Mrn = incomingDecision.GetMrn(),
+                Mrn = mrn,
                 Timestamp = DateTime.UtcNow,
                 Id = ObjectId.GenerateNewId().ToString(),
-                Xml = incomingDecision.ToHtmlDecodedXml(),
+                Xml = incoming.ToHtmlDecodedXml(),
             }
         );
 

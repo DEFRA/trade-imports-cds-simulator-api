@@ -7,7 +7,7 @@ public static class Endpoints
 {
     public static class DecisionNotifications
     {
-        public static string Post => "alvsclearance/decisionnotification/v1";
+        public static string Post => "ws/CDS/defra/alvsclearanceinbound/v1";
 
         public static string Get(string? mrn, DateTime? from, DateTime? to)
         {
@@ -34,7 +34,7 @@ public static class Endpoints
 
     public static class ErrorNotifications
     {
-        public static string Post => "alvsclearance/errornotification/v1";
+        public static string Post => "ws/CDS/defra/alvsclearanceinbound/v1";
 
         public static string Get(string? mrn, DateTime? from, DateTime? to)
         {
