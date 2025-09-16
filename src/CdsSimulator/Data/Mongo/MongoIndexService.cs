@@ -14,6 +14,12 @@ public class MongoIndexService(IMongoDatabase database, ILogger<MongoIndexServic
             Builders<DecisionNotification>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.Timestamp),
             cancellationToken: cancellationToken
         );
+
+        await CreateIndex(
+            "ErrorNotificationIdx",
+            Builders<ErrorNotification>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.Timestamp),
+            cancellationToken: cancellationToken
+        );
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

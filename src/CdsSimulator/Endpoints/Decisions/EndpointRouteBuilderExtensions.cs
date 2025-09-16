@@ -2,8 +2,10 @@ using Defra.TradeImportsCdsSimulator.Authentication;
 using Defra.TradeImportsCdsSimulator.Data;
 using Defra.TradeImportsCdsSimulator.Data.Entities;
 using Defra.TradeImportsCdsSimulator.Extensions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
+using MongoDB.Driver.Linq;
 
 namespace Defra.TradeImportsCdsSimulator.Endpoints.Decisions;
 
@@ -12,6 +14,7 @@ public static class EndpointRouteBuilderExtensions
     public static void MapDecisionEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("alvsclearance/decisionnotification/v1", PutDecision).RequireAuthorization(PolicyNames.Write);
+        app.MapGet("decision-notifications", GetDecisions).RequireAuthorization(PolicyNames.Read);
     }
 
     [HttpPost]
@@ -39,5 +42,39 @@ public static class EndpointRouteBuilderExtensions
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.Accepted();
+    }
+
+    [HttpGet]
+    private static async Task<IResult> GetDecisions(
+        [AsParameters] GetDecisionsQuery request,
+        [FromServices] IValidator<GetDecisionsQuery> validator,
+        [FromServices] IDbContext dbContext,
+        CancellationToken cancellationToken
+    )
+    {
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            return Results.ValidationProblem(validationResult.ToDictionary());
+        }
+
+        var query = from decision in dbContext.DecisionNotifications select decision;
+
+        if (!string.IsNullOrEmpty(request.Mrn))
+        {
+            query = from decision in query where decision.Mrn == request.Mrn select decision;
+        }
+
+        if (request.From.HasValue)
+        {
+            query = from decision in query where decision.Timestamp >= request.From select decision;
+        }
+
+        if (request.To.HasValue)
+        {
+            query = from decision in query where decision.Timestamp < request.To select decision;
+        }
+
+        return Results.Ok(await query.ToListWithFallbackAsync(cancellationToken: cancellationToken));
     }
 }
