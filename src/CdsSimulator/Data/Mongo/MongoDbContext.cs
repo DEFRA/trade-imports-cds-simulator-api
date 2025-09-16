@@ -14,15 +14,15 @@ public class MongoDbContext : IDbContext
         _logger = logger;
 
         Database = database;
-        DecisionNotifications = new MongoCollectionSet<DecisionNotification>(this);
-        ErrorNotifications = new MongoCollectionSet<ErrorNotification>(this);
+        DecisionNotifications = new MongoCollectionSet<Notification>(this, nameof(DecisionNotifications));
+        ErrorNotifications = new MongoCollectionSet<Notification>(this, nameof(ErrorNotifications));
     }
 
     internal IMongoDatabase Database { get; }
 
-    public IMongoCollectionSet<DecisionNotification> DecisionNotifications { get; }
+    public IMongoCollectionSet<Notification> DecisionNotifications { get; }
 
-    public IMongoCollectionSet<ErrorNotification> ErrorNotifications { get; }
+    public IMongoCollectionSet<Notification> ErrorNotifications { get; }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {

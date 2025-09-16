@@ -11,13 +11,15 @@ public class MongoIndexService(IMongoDatabase database, ILogger<MongoIndexServic
     {
         await CreateIndex(
             "DecisionNotificationIdx",
-            Builders<DecisionNotification>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.Timestamp),
+            Builders<Notification>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.Timestamp),
+            collectionName: nameof(IDbContext.DecisionNotifications),
             cancellationToken: cancellationToken
         );
 
         await CreateIndex(
             "ErrorNotificationIdx",
-            Builders<ErrorNotification>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.Timestamp),
+            Builders<Notification>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.Timestamp),
+            collectionName: nameof(IDbContext.ErrorNotifications),
             cancellationToken: cancellationToken
         );
     }
@@ -31,6 +33,7 @@ public class MongoIndexService(IMongoDatabase database, ILogger<MongoIndexServic
         string name,
         IndexKeysDefinition<T> keys,
         bool unique = false,
+        string? collectionName = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -45,9 +48,12 @@ public class MongoIndexService(IMongoDatabase database, ILogger<MongoIndexServic
                     Unique = unique,
                 }
             );
-            await database
-                .GetCollection<T>(typeof(T).Name)
-                .Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
+
+            var collection = string.IsNullOrEmpty(collectionName)
+                ? database.GetCollection<T>(typeof(T).Name)
+                : database.GetCollection<T>(collectionName);
+
+            await collection.Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
         }
         catch (Exception e)
         {

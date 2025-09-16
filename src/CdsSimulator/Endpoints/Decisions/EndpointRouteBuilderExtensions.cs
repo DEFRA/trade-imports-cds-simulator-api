@@ -30,7 +30,7 @@ public static class EndpointRouteBuilderExtensions
         var incomingDecision = await reader.ReadToEndAsync(cancellationToken);
 
         dbContext.DecisionNotifications.Insert(
-            new DecisionNotification()
+            new Notification()
             {
                 Mrn = incomingDecision.GetMrn(),
                 Timestamp = DateTime.UtcNow,
@@ -59,21 +59,7 @@ public static class EndpointRouteBuilderExtensions
         }
 
         var query = from decision in dbContext.DecisionNotifications select decision;
-
-        if (!string.IsNullOrEmpty(request.Mrn))
-        {
-            query = from decision in query where decision.Mrn == request.Mrn select decision;
-        }
-
-        if (request.From.HasValue)
-        {
-            query = from decision in query where decision.Timestamp >= request.From select decision;
-        }
-
-        if (request.To.HasValue)
-        {
-            query = from decision in query where decision.Timestamp < request.To select decision;
-        }
+        query = query.ApplyNotificationQuery(request);
 
         return Results.Ok(await query.ToListWithFallbackAsync(cancellationToken: cancellationToken));
     }

@@ -5,11 +5,9 @@ namespace Defra.TradeImportsCdsSimulator.Tests.Utils.InMemoryData;
 
 public class MemoryDbContext : IDbContext
 {
-    public IMongoCollectionSet<DecisionNotification> DecisionNotifications { get; } =
-        new MemoryCollectionSet<DecisionNotification>();
+    public IMongoCollectionSet<Notification> DecisionNotifications { get; } = new MemoryCollectionSet<Notification>();
 
-    public IMongoCollectionSet<ErrorNotification> ErrorNotifications { get; } =
-        new MemoryCollectionSet<ErrorNotification>();
+    public IMongoCollectionSet<Notification> ErrorNotifications { get; } = new MemoryCollectionSet<Notification>();
 
     public Task SaveChangesAsync(CancellationToken cancellationToken)
     {

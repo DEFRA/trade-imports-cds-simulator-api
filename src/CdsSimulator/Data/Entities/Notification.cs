@@ -1,6 +1,6 @@
 namespace Defra.TradeImportsCdsSimulator.Data.Entities;
 
-public class ErrorNotification
+public class Notification
 {
     public required string Id { get; init; }
     public required DateTime Timestamp { get; init; }

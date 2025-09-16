@@ -84,7 +84,7 @@ public class GetTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
     public async Task Get_WhenValidAndResults_ShouldBeRequestBodyAsResponse()
     {
         MockDbContext.ErrorNotifications.AddTestData(
-            new ErrorNotification()
+            new Notification()
             {
                 Mrn = "test",
                 Timestamp = DateTime.UtcNow.AddSeconds(-10),
