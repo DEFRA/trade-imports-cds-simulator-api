@@ -1,6 +1,7 @@
 using Defra.TradeImportsCdsSimulator.Authentication;
 using Defra.TradeImportsCdsSimulator.Data.Entities;
 using Defra.TradeImportsCdsSimulator.Data.Extensions;
+using Defra.TradeImportsCdsSimulator.Endpoints;
 using Defra.TradeImportsCdsSimulator.Endpoints.Decisions;
 using Defra.TradeImportsCdsSimulator.Endpoints.OutboundErrors;
 using Defra.TradeImportsCdsSimulator.Extensions;
@@ -67,7 +68,7 @@ static void ConfigureWebApplication(WebApplicationBuilder builder, string[] args
 
     builder.Services.AddCustomMetrics();
 
-    builder.Services.AddValidatorsFromAssemblyContaining<GetDecisionsQuery>();
+    builder.Services.AddValidatorsFromAssemblyContaining<GetQuery>();
 
     builder.Services.AddDbContext(builder.Configuration, integrationTest);
 }

@@ -46,8 +46,8 @@ public static class EndpointRouteBuilderExtensions
 
     [HttpGet]
     private static async Task<IResult> GetErrors(
-        [AsParameters] GetErrorsQuery request,
-        [FromServices] IValidator<GetErrorsQuery> validator,
+        [AsParameters] GetQuery request,
+        [FromServices] IValidator<GetQuery> validator,
         [FromServices] IDbContext dbContext,
         CancellationToken cancellationToken
     )

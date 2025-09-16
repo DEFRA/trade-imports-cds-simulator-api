@@ -1,14 +1,14 @@
 using FluentValidation;
 
-namespace Defra.TradeImportsCdsSimulator.Endpoints.OutboundErrors;
+namespace Defra.TradeImportsCdsSimulator.Endpoints;
 
-public class GetErrorsQuery
+public class GetQuery
 {
     public string? Mrn { get; set; }
     public DateTime? From { get; set; }
     public DateTime? To { get; set; }
 
-    public class Validator : AbstractValidator<GetErrorsQuery>
+    public class Validator : AbstractValidator<GetQuery>
     {
         public Validator()
         {
@@ -26,7 +26,7 @@ public class GetErrorsQuery
                 .WithMessage("must be UTC");
         }
 
-        private static bool HaveValidDateRange(GetErrorsQuery arg)
+        private static bool HaveValidDateRange(GetQuery arg)
         {
             if (arg is { From: not null, To: not null })
             {
@@ -36,7 +36,7 @@ public class GetErrorsQuery
             return true;
         }
 
-        private static bool HaveAtLeastOneValue(GetErrorsQuery arg)
+        private static bool HaveAtLeastOneValue(GetQuery arg)
         {
             return !string.IsNullOrEmpty(arg.Mrn) || arg.From.HasValue || arg.To.HasValue;
         }

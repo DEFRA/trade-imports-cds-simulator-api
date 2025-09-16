@@ -46,8 +46,8 @@ public static class EndpointRouteBuilderExtensions
 
     [HttpGet]
     private static async Task<IResult> GetDecisions(
-        [AsParameters] GetDecisionsQuery request,
-        [FromServices] IValidator<GetDecisionsQuery> validator,
+        [AsParameters] GetQuery request,
+        [FromServices] IValidator<GetQuery> validator,
         [FromServices] IDbContext dbContext,
         CancellationToken cancellationToken
     )
