@@ -12,12 +12,12 @@ public static class EndpointRouteBuilderExtensions
 {
     public static void MapDecisionEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("ws/CDS/defra/alvsclearanceinbound/v1", PutDecision).RequireAuthorization(PolicyNames.Write);
+        app.MapPost("ws/CDS/defra/alvsclearanceinbound/v1", PutNotification);
         app.MapGet("decision-notifications", GetDecisions).RequireAuthorization(PolicyNames.Read);
     }
 
     [HttpPost]
-    private static async Task<IResult> PutDecision(
+    private static async Task<IResult> PutNotification(
         HttpContext context,
         [FromServices] IDbContext dbContext,
         CancellationToken cancellationToken
@@ -28,29 +28,34 @@ public static class EndpointRouteBuilderExtensions
         using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
         var incoming = await reader.ReadToEndAsync(cancellationToken);
 
-        string mrn;
         if (incoming.IsErrorNotification())
         {
-            mrn = incoming.GetErrorMrn();
+            dbContext.ErrorNotifications.Insert(
+                new Notification()
+                {
+                    Mrn = incoming.GetErrorMrn(),
+                    Timestamp = DateTime.UtcNow,
+                    Id = ObjectId.GenerateNewId().ToString(),
+                    Xml = incoming.ToHtmlDecodedXml(),
+                }
+            );
         }
         else if (incoming.IsDecisionNotification())
         {
-            mrn = incoming.GetDecisionMrn();
+            dbContext.DecisionNotifications.Insert(
+                new Notification()
+                {
+                    Mrn = incoming.GetDecisionMrn(),
+                    Timestamp = DateTime.UtcNow,
+                    Id = ObjectId.GenerateNewId().ToString(),
+                    Xml = incoming.ToHtmlDecodedXml(),
+                }
+            );
         }
         else
         {
             return Results.Problem("Unexpected XML", statusCode: 400);
         }
-
-        dbContext.DecisionNotifications.Insert(
-            new Notification()
-            {
-                Mrn = mrn,
-                Timestamp = DateTime.UtcNow,
-                Id = ObjectId.GenerateNewId().ToString(),
-                Xml = incoming.ToHtmlDecodedXml(),
-            }
-        );
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

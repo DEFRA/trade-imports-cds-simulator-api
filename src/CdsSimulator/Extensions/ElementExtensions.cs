@@ -27,29 +27,6 @@ public static class ElementExtensions
         return ele.Value;
     }
 
-    ////public static ErrorHeader FromXml(string? xml)
-    ////{
-    ////    if (xml == null)
-    ////    {
-    ////        return Empty;
-    ////    }
-
-    ////    using var reader = XmlReader.Create(new StringReader(xml.ToHtmlDecodedXml()));
-
-    ////    reader.ReadToFollowing(ErrorElementNames.Header.LocalName, ErrorElementNames.Header.NamespaceName);
-
-    ////    if (reader.NodeType != XmlNodeType.Element)
-    ////    {
-    ////        return Empty;
-    ////    }
-
-    ////    var header = XElement.Load(reader.ReadSubtree());
-
-    ////    var entryReference = header.GetElementStringValue(ErrorElementNames.EntryReference);
-    ////    var entryVersionNumber = header.GetElementIntValue(ErrorElementNames.EntryVersionNumber);
-
-    ////    return new ErrorHeader(entryReference, entryVersionNumber);
-    ////}
     public static string GetDecisionMrn(this string xml)
     {
         return xml.GetMrn(

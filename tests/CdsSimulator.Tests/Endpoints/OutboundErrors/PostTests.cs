@@ -22,32 +22,6 @@ public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper
     }
 
     [Fact]
-    public async Task Post_WhenUnauthorized_ShouldBeUnauthorized()
-    {
-        var client = CreateClient(addDefaultAuthorizationHeader: false);
-
-        var response = await client.PostAsync(
-            Testing.Endpoints.ErrorNotifications.Post,
-            new StringContent(SampleOutboundError)
-        );
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task Post_WhenReadOnly_ShouldBeForbidden()
-    {
-        var client = CreateClient(testUser: TestUser.ReadOnly);
-
-        var response = await client.PostAsync(
-            Testing.Endpoints.ErrorNotifications.Post,
-            new StringContent(SampleOutboundError)
-        );
-
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Post_WhenValid_ShouldBeRequestBodyAsResponse()
     {
         var client = CreateClient();
