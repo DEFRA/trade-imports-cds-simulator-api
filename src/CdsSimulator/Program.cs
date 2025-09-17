@@ -1,14 +1,21 @@
 using Defra.TradeImportsCdsSimulator.Authentication;
+using Defra.TradeImportsCdsSimulator.Data.Entities;
 using Defra.TradeImportsCdsSimulator.Data.Extensions;
+using Defra.TradeImportsCdsSimulator.Endpoints;
+using Defra.TradeImportsCdsSimulator.Endpoints.Decisions;
+using Defra.TradeImportsCdsSimulator.Endpoints.OutboundErrors;
 using Defra.TradeImportsCdsSimulator.Extensions;
 using Defra.TradeImportsCdsSimulator.Health;
 using Defra.TradeImportsCdsSimulator.Metrics;
 using Defra.TradeImportsCdsSimulator.Utils;
 using Defra.TradeImportsCdsSimulator.Utils.Http;
 using Defra.TradeImportsCdsSimulator.Utils.Logging;
+using Elastic.CommonSchema;
 using Elastic.CommonSchema.Serilog;
+using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Serilog;
+using Log = Serilog.Log;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console(new EcsTextFormatter()).CreateBootstrapLogger();
 
@@ -61,6 +68,8 @@ static void ConfigureWebApplication(WebApplicationBuilder builder, string[] args
 
     builder.Services.AddCustomMetrics();
 
+    builder.Services.AddValidatorsFromAssemblyContaining<GetQuery>();
+
     builder.Services.AddDbContext(builder.Configuration, integrationTest);
 }
 
@@ -73,6 +82,8 @@ static WebApplication BuildWebApplication(WebApplicationBuilder builder)
     app.UseStatusCodePages();
     app.UseHeaderPropagation();
     app.UseMiddleware<MetricsMiddleware>();
+    app.MapDecisionEndpoints();
+    app.MapErrorEndpoints();
     app.UseExceptionHandler(
         new ExceptionHandlerOptions
         {

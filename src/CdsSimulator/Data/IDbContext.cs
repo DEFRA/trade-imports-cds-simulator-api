@@ -4,11 +4,9 @@ namespace Defra.TradeImportsCdsSimulator.Data;
 
 public interface IDbContext
 {
-    IMongoCollectionSet<RawMessageEntity> RawMessages { get; }
+    IMongoCollectionSet<Notification> DecisionNotifications { get; }
 
-    Task SaveChanges(CancellationToken cancellationToken);
+    IMongoCollectionSet<Notification> ErrorNotifications { get; }
 
-    Task StartTransaction(CancellationToken cancellationToken);
-
-    Task CommitTransaction(CancellationToken cancellationToken);
+    Task SaveChangesAsync(CancellationToken cancellationToken);
 }
