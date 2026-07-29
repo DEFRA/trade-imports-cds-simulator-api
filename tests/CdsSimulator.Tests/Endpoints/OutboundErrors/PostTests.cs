@@ -31,6 +31,6 @@ public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper
             new StringContent(SampleOutboundError)
         );
 
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 }
