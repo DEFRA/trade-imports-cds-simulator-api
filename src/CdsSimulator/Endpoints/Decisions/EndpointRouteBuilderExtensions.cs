@@ -59,7 +59,7 @@ public static class EndpointRouteBuilderExtensions
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Results.Accepted();
+        return Results.NoContent();
     }
 
     [HttpGet]

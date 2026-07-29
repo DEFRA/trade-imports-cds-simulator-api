@@ -19,6 +19,6 @@ public class PostTests : TestBase.TestBase
             new StringContent(Decision)
         );
 
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 }
