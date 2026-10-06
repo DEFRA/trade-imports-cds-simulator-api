@@ -12,12 +12,16 @@ public class BtmsGatewayClientTests
         // Arrange
         string? capturedBody = null;
 
-        var handler = new CaptureHandler((req, ct) =>
-        {
-            // capture content
-            capturedBody = req.Content?.ReadAsStringAsync(ct).Result;
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("OK") });
-        });
+        var handler = new CaptureHandler(
+            (req, ct) =>
+            {
+                // capture content
+                capturedBody = req.Content?.ReadAsStringAsync(ct).Result;
+                return Task.FromResult(
+                    new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("OK") }
+                );
+            }
+        );
 
         var httpClient = new HttpClient(handler);
 
@@ -31,8 +35,8 @@ public class BtmsGatewayClientTests
             Password = password,
             Routes = new Dictionary<string, BtmsClientRoute>
             {
-                ["AlvsClearanceRequest"] = new() { Path = BtmsGatewayClient.DefaultRoutePath }
-            }
+                ["AlvsClearanceRequest"] = new() { Path = BtmsGatewayClient.DefaultRoutePath },
+            },
         };
 
         var client = new BtmsGatewayClient(httpClient, btmsOptions);
@@ -46,15 +50,12 @@ public class BtmsGatewayClientTests
                 CorrelationId = 123ul,
                 ServiceCallTimestamp = DateTime.UtcNow,
             },
-            Header = new AlvsClearanceRequestHeader
-            {
-                EntryReference = "290-000151G-02/01/2022",
-            },
-            Items = [new AlvsClearanceRequestItem { ItemNumber = 1 }]
+            Header = new AlvsClearanceRequestHeader { EntryReference = "290-000151G-02/01/2022" },
+            Items = [new AlvsClearanceRequestItem { ItemNumber = 1 }],
         };
 
         // Act
-        var resp = await client.PostClearanceRequestAsync(requestModel, "http://localhost:1234");
+        var resp = await client.PostClearanceRequestAsync(requestModel);
 
         // Assert
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -69,7 +70,10 @@ public class BtmsGatewayClientTests
     private class CaptureHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> onSend)
         : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
         {
             return onSend(request, cancellationToken);
         }

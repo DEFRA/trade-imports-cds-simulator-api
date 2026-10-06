@@ -23,7 +23,7 @@ public class MemoryCollectionSet<T> : IMongoCollectionSet<T>
 
     internal void AddTestData(T item) => _data.Add(item);
 
-    public void Insert(T item) => throw new NotImplementedException();
+    public void Insert(T item) => _data.Add(item);
 
-    public Task Save(CancellationToken cancellationToken) => throw new NotImplementedException();
+    public Task Save(CancellationToken cancellationToken) => Task.CompletedTask;
 }

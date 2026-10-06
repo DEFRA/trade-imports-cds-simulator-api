@@ -7,7 +7,7 @@ using CdsSimulator.BtmsClient.Models;
 
 namespace CdsSimulator.BtmsClient;
 
-public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClientOptions)
+public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClientOptions) : IBtmsGatewayClient
 {
     public const string DefaultRoutePath = "/ITSW/CDS/SubmitImportDocumentCDSFacadeService";
 
@@ -15,11 +15,13 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
 
     public async Task<HttpResponseMessage> PostClearanceRequestAsync(
         AlvsClearanceRequest request,
-        string gatewayBaseUrl,
         CancellationToken cancellationToken = default
     )
     {
-        var target = CombineUrl(gatewayBaseUrl, btmsClientOptions.Routes["AlvsClearanceRequest"].Path);
+        var target = CombineUrl(
+            btmsClientOptions.GatewayBaseUrl,
+            btmsClientOptions.Routes["AlvsClearanceRequest"].Path
+        );
 
         var soap = BuildSoapEnvelope(request, btmsClientOptions.UsernameToken, btmsClientOptions.Password);
 
@@ -33,8 +35,10 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
 
     private static string CombineUrl(string baseUrl, string path)
     {
-        if (string.IsNullOrWhiteSpace(baseUrl)) throw new ArgumentNullException(nameof(baseUrl));
-        if (string.IsNullOrWhiteSpace(path)) return baseUrl;
+        if (string.IsNullOrWhiteSpace(baseUrl))
+            throw new ArgumentNullException(nameof(baseUrl));
+        if (string.IsNullOrWhiteSpace(path))
+            return baseUrl;
         var baseUri = new System.Uri(baseUrl, System.UriKind.Absolute);
         var target = new System.Uri(baseUri, path);
         return target.ToString();
@@ -91,7 +95,12 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         ns.Add(string.Empty, "http://submitimportdocumenthmrcfacade.types.esb.ws.cara.defra.com");
 
         var serializer = new XmlSerializer(typeof(T));
-        var settings = new XmlWriterSettings { OmitXmlDeclaration = true, Encoding = Encoding.UTF8, Indent = false };
+        var settings = new XmlWriterSettings
+        {
+            OmitXmlDeclaration = true,
+            Encoding = Encoding.UTF8,
+            Indent = false,
+        };
 
         using var sw = new StringWriter();
         using var xw = XmlWriter.Create(sw, settings);

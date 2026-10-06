@@ -12,7 +12,7 @@ namespace CdsSimulator.BtmsClient.Tests
         public void AddBtmsClient_RegistersOptionsAndClient()
         {
             // Arrange: in-memory configuration
-            var inMemory = new System.Collections.Generic.Dictionary<string, string?>
+            var inMemory = new Dictionary<string, string?>
             {
                 ["BtmsClient:GatewayBaseUrl"] = "http://localhost:1234",
                 ["BtmsClient:UsernameToken"] = "user",
@@ -29,11 +29,11 @@ namespace CdsSimulator.BtmsClient.Tests
             var sp = services.BuildServiceProvider();
 
             // Assert
-            var opts = sp.GetService<IOptions<CdsSimulator.BtmsClient.BtmsClientOptions>>();
+            var opts = sp.GetService<IOptions<BtmsClientOptions>>();
             Assert.NotNull(opts);
             Assert.Equal("http://localhost:1234", opts!.Value.GatewayBaseUrl);
 
-            var client = sp.GetService<CdsSimulator.BtmsClient.BtmsGatewayClient>();
+            var client = sp.GetService<IBtmsGatewayClient>();
             Assert.NotNull(client);
         }
     }

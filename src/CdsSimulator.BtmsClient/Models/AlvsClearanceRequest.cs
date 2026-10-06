@@ -4,7 +4,11 @@ namespace CdsSimulator.BtmsClient.Models
 {
     [Serializable]
     [XmlType(TypeName = "ALVSClearanceRequest")]
-    [XmlRoot(ElementName = "ALVSClearanceRequest", Namespace = "http://submitimportdocumenthmrcfacade.types.esb.ws.cara.defra.com", IsNullable = false)]
+    [XmlRoot(
+        ElementName = "ALVSClearanceRequest",
+        Namespace = "http://submitimportdocumenthmrcfacade.types.esb.ws.cara.defra.com",
+        IsNullable = false
+    )]
     public record AlvsClearanceRequest
     {
         [XmlElement(ElementName = "ServiceHeader")]
