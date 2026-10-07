@@ -1,5 +1,8 @@
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
+using System.Reflection;
 using Azure.Core;
 using CdsSimulator.BtmsClient;
 using CdsSimulator.BtmsClient.Models;
@@ -13,12 +16,10 @@ public static class EndpointRouteBuilderExtensions
 {
     public static void MapClearanceRequestEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("clearanceRequest", PostClearanceRequest)
-            .Accepts<AlvsClearanceRequest>("application/json", "application/xml")
+        app.MapPost("ws/CDS/defra/alvsclearancerequestinbound/v1", PostClearanceRequest)
             .Produces(StatusCodes.Status201Created);
 
         app.MapPut("clearanceRequest", PutClearanceRequest)
-            .Accepts<AlvsClearanceRequest>("application/json", "application/xml")
             .Produces(StatusCodes.Status204NoContent);
     }
 
@@ -127,48 +128,69 @@ public static class EndpointRouteBuilderExtensions
     {
         var contentType = httpRequest.ContentType?.Split(';')[0].Trim().ToLowerInvariant() ?? string.Empty;
 
-        // If XML, use XmlSerializer
         if (contentType.Contains("xml"))
         {
+            // Read the request body as a string with BOM detection
+            using var sr = new StreamReader(httpRequest.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+            var body = await sr.ReadToEndAsync(cancellationToken);
+
+            // Parse XML and extract the expected element (e.g., ALVSClearanceRequest inside a SOAP body)
+            XDocument doc;
             try
             {
-                var serializer = new XmlSerializer(typeof(T));
-
-                // Read the request body as a string first to avoid encoding mismatches
-                // (e.g. xml declaration may state utf-16 while the HTTP body is encoded as UTF-8).
-                using var sr = new StreamReader(
-                    httpRequest.Body,
-                    Encoding.UTF8,
-                    detectEncodingFromByteOrderMarks: true
-                );
-                var body = await sr.ReadToEndAsync();
-
-                using var stringReader = new StringReader(body);
-                if (serializer.Deserialize(stringReader) is not T request)
-                    throw new InvalidOperationException($"Unable to deserialise XML to type {typeof(T).FullName}");
-                return request;
+                doc = XDocument.Parse(body);
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"XML deserialization failed: {ex.Message}", ex);
+                throw new InvalidOperationException("Request body is not valid XML.", ex);
             }
+
+            var rootAttr = typeof(T).GetCustomAttribute<XmlRootAttribute>();
+            var expectedLocal = rootAttr?.ElementName ?? typeof(T).Name;
+            var expectedNs = rootAttr?.Namespace ?? string.Empty;
+
+            var payload = doc.Descendants()
+                .FirstOrDefault(e => e.Name.LocalName == expectedLocal && (string.IsNullOrEmpty(expectedNs) || e.Name.NamespaceName == expectedNs));
+
+            if (payload is null)
+            {
+                throw new InvalidOperationException($"SOAP body does not contain expected '{expectedLocal}' element.");
+            }
+
+            // Mark empty leaf elements as xsi:nil="true" so XmlSerializer treats them as null
+            var xsi = XNamespace.Get("http://www.w3.org/2001/XMLSchema-instance");
+            // ensure xsi prefix is declared on the payload
+            if (payload.GetNamespaceOfPrefix("xsi") == null)
+            {
+                payload.SetAttributeValue(XNamespace.Xmlns + "xsi", xsi.NamespaceName);
+            }
+
+            var emptyLeaves = payload.DescendantsAndSelf().Where(e => !e.HasElements && string.IsNullOrWhiteSpace(e.Value)).ToList();
+            foreach (var el in emptyLeaves)
+            {
+                el.SetAttributeValue(xsi + "nil", "true");
+                el.RemoveNodes(); // remove empty text content
+            }
+
+            var xml = payload.ToString(SaveOptions.DisableFormatting);
+
+            var serializer = new XmlSerializer(typeof(T));
+            var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null };
+
+            using var reader = XmlReader.Create(new StringReader(xml), settings);
+            if (serializer.Deserialize(reader) is not T request)
+                throw new InvalidOperationException($"Unable to deserialize XML to {typeof(T).FullName}");
+
+            return request;
         }
 
-        // Default to JSON
-        try
-        {
-            var jsonOptions = httpRequest
-                .HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>()
-                .Value.SerializerOptions;
+        // JSON path
+        var jsonOptions = httpRequest.HttpContext.RequestServices
+            .GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>()
+            .Value.SerializerOptions;
 
-            var result = await httpRequest.ReadFromJsonAsync<T>(jsonOptions, cancellationToken);
-
-            return result ?? throw new InvalidOperationException($"Unable to deserialize JSON to {typeof(T).FullName}");
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"JSON deserialization failed: {ex.Message}", ex);
-        }
+        var result = await httpRequest.ReadFromJsonAsync<T>(jsonOptions, cancellationToken);
+        return result ?? throw new InvalidOperationException($"Unable to deserialize JSON to {typeof(T).FullName}");
     }
 
     public static async Task<ClearanceRequest> SaveClearanceRequest(
