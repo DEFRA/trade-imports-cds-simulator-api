@@ -1,8 +1,8 @@
+using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using System.Reflection;
 using Azure.Core;
 using CdsSimulator.BtmsClient;
 using CdsSimulator.BtmsClient.Models;
@@ -19,8 +19,7 @@ public static class EndpointRouteBuilderExtensions
         app.MapPost("ws/CDS/defra/alvsclearancerequestinbound/v1", PostClearanceRequest)
             .Produces(StatusCodes.Status201Created);
 
-        app.MapPut("clearanceRequest", PutClearanceRequest)
-            .Produces(StatusCodes.Status204NoContent);
+        app.MapPut("clearanceRequest", PutClearanceRequest).Produces(StatusCodes.Status204NoContent);
     }
 
     public static async Task<IResult> PostClearanceRequest(
@@ -150,7 +149,10 @@ public static class EndpointRouteBuilderExtensions
             var expectedNs = rootAttr?.Namespace ?? string.Empty;
 
             var payload = doc.Descendants()
-                .FirstOrDefault(e => e.Name.LocalName == expectedLocal && (string.IsNullOrEmpty(expectedNs) || e.Name.NamespaceName == expectedNs));
+                .FirstOrDefault(e =>
+                    e.Name.LocalName == expectedLocal
+                    && (string.IsNullOrEmpty(expectedNs) || e.Name.NamespaceName == expectedNs)
+                );
 
             if (payload is null)
             {
@@ -165,7 +167,10 @@ public static class EndpointRouteBuilderExtensions
                 payload.SetAttributeValue(XNamespace.Xmlns + "xsi", xsi.NamespaceName);
             }
 
-            var emptyLeaves = payload.DescendantsAndSelf().Where(e => !e.HasElements && string.IsNullOrWhiteSpace(e.Value)).ToList();
+            var emptyLeaves = payload
+                .DescendantsAndSelf()
+                .Where(e => !e.HasElements && string.IsNullOrWhiteSpace(e.Value))
+                .ToList();
             foreach (var el in emptyLeaves)
             {
                 el.SetAttributeValue(xsi + "nil", "true");
@@ -185,8 +190,8 @@ public static class EndpointRouteBuilderExtensions
         }
 
         // JSON path
-        var jsonOptions = httpRequest.HttpContext.RequestServices
-            .GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>()
+        var jsonOptions = httpRequest
+            .HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>()
             .Value.SerializerOptions;
 
         var result = await httpRequest.ReadFromJsonAsync<T>(jsonOptions, cancellationToken);

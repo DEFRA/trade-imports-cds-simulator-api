@@ -30,11 +30,7 @@ public class WireMockClient
         var mapping = new
         {
             priority = 1,
-            request = new
-            {
-                method = "POST",
-                urlPath = "/ITSW/CDS/SubmitImportDocumentCDSFacadeService",
-            },
+            request = new { method = "POST", urlPath = "/ITSW/CDS/SubmitImportDocumentCDSFacadeService" },
             response = new
             {
                 status = 200,
@@ -54,11 +50,7 @@ public class WireMockClient
     {
         var response = await _httpClient.PostAsJsonAsync(
             "/__admin/requests/count",
-            new
-            {
-                method = "POST",
-                urlPath = "/ITSW/CDS/SubmitImportDocumentCDSFacadeService",
-            },
+            new { method = "POST", urlPath = "/ITSW/CDS/SubmitImportDocumentCDSFacadeService" },
             cancellationToken
         );
 
@@ -68,5 +60,4 @@ public class WireMockClient
         using var doc = JsonDocument.Parse(content);
         return doc.RootElement.TryGetProperty("count", out var countElement) && countElement.GetInt32() > 0;
     }
-
 }

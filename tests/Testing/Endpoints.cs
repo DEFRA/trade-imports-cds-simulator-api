@@ -8,7 +8,7 @@ public static class Endpoints
     public static class ClearanceRequests
     {
         public static string Post => "ws/CDS/defra/alvsclearancerequestinbound/v1";
-        
+
         public static string Put => "ws/CDS/defra/alvsclearancerequestinbound/v1";
     }
 

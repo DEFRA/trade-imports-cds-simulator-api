@@ -1,17 +1,12 @@
 using System.Net;
 using System.Text;
 using System.Xml.Serialization;
-
 using CdsSimulator.BtmsClient;
 using CdsSimulator.BtmsClient.Models;
-
 using Defra.TradeImportsCdsSimulator.Data;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-
 using NSubstitute;
-
 using Xunit.Abstractions;
 
 namespace Defra.TradeImportsCdsSimulator.Tests.Endpoints.ClearanceRequests;
@@ -121,15 +116,15 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
         var innerXml = sb.ToString();
 
         var soap = $"""
-                   <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:oas="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
-                        <soap:Header>
-                            <oas:Security soap:role="system" soap:mustUnderstand="true">
-                                <oas:UsernameToken></oas:UsernameToken>
-                            </oas:Security>
-                        </soap:Header>
-                        <soap:Body>{innerXml}</soap:Body>
-                   </soap:Envelope>
-                   """;
+            <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:oas="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                 <soap:Header>
+                     <oas:Security soap:role="system" soap:mustUnderstand="true">
+                         <oas:UsernameToken></oas:UsernameToken>
+                     </oas:Security>
+                 </soap:Header>
+                 <soap:Body>{innerXml}</soap:Body>
+            </soap:Envelope>
+            """;
 
         var content = new StringContent(soap, Encoding.UTF8, "application/xml");
         var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/clearanceRequest") { Content = content };
