@@ -1,8 +1,8 @@
 namespace Defra.TradeImportsCdsSimulator.Utils.CorrelationId;
 
-public class CorrelationIdGenerator : ICorrelationIdGenerator
+public static class CorrelationIdGenerator
 {
-    public string Generate()
+    public static string Generate()
     {
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var random = Random.Shared.Next(1, 9999999);

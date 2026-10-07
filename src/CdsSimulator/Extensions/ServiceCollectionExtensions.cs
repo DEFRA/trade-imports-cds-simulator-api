@@ -11,7 +11,6 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration
     )
     {
-        services.AddSingleton<ICorrelationIdGenerator, CorrelationIdGenerator>();
         services.AddOptions<CdpOptions>().Bind(configuration).ValidateDataAnnotations();
 
         return services;

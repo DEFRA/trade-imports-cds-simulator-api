@@ -53,7 +53,7 @@ public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITest
         }
 
         var content = new StringContent(sb.ToString(), Encoding.UTF8, "application/xml");
-        var response = await client.PostAsync("/clearanceRequest", content);
+        var response = await client.PostAsync(Testing.Endpoints.ClearanceRequests.Post, content);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
 
@@ -79,7 +79,7 @@ public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITest
 
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await client.PostAsync("/clearanceRequest", content);
+        var response = await client.PostAsync(Testing.Endpoints.ClearanceRequests.Post, content);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
@@ -123,7 +123,7 @@ public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITest
             """;
 
         var content = new StringContent(soap, Encoding.UTF8, "application/xml");
-        var response = await client.PostAsync("/clearanceRequest", content);
+        var response = await client.PostAsync(Testing.Endpoints.ClearanceRequests.Post, content);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
 

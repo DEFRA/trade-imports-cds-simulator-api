@@ -18,10 +18,8 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         CancellationToken cancellationToken = default
     )
     {
-        var target = CombineUrl(
-            btmsClientOptions.GatewayBaseUrl,
-            btmsClientOptions.Routes["AlvsClearanceRequest"].Path
-        );
+        var routePath = GetRoutePath(btmsClientOptions.Routes, "AlvsClearanceRequest");
+        var target = CombineUrl(btmsClientOptions.GatewayBaseUrl, routePath);
 
         var soap = BuildSoapEnvelope(request, btmsClientOptions.UsernameToken, btmsClientOptions.Password);
 
@@ -42,6 +40,24 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         var baseUri = new System.Uri(baseUrl, System.UriKind.Absolute);
         var target = new System.Uri(baseUri, path);
         return target.ToString();
+    }
+
+    private static string GetRoutePath(IReadOnlyDictionary<string, BtmsClientRoute> routes, string routeName)
+    {
+        if (routes.TryGetValue(routeName, out var route))
+        {
+            return route.Path;
+        }
+
+        var matchedRoute = routes.FirstOrDefault(kvp =>
+            string.Equals(kvp.Key, routeName, StringComparison.OrdinalIgnoreCase)
+        );
+        if (!string.IsNullOrWhiteSpace(matchedRoute.Key))
+        {
+            return matchedRoute.Value.Path;
+        }
+
+        throw new KeyNotFoundException($"Route '{routeName}' was not configured under BtmsClient:Routes.");
     }
 
     private static string BuildSoapEnvelope(AlvsClearanceRequest request, string? usernameToken, string? password)

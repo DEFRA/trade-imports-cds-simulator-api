@@ -3,10 +3,10 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using Azure.Core;
 using CdsSimulator.BtmsClient;
 using CdsSimulator.BtmsClient.Models;
 using Defra.TradeImportsCdsSimulator.Data;
+using Defra.TradeImportsCdsSimulator.Utils.Mrn;
 using MongoDB.Bson;
 using ClearanceRequest = Defra.TradeImportsCdsSimulator.Data.Entities.ClearanceRequest;
 
@@ -40,7 +40,7 @@ public static class EndpointRouteBuilderExtensions
             return Results.BadRequest("ServiceHeader.CorrelationId must not be set");
         }
 
-        request.ServiceHeader.CorrelationId = (ulong)DateTime.UtcNow.Ticks;
+        request.ServiceHeader.CorrelationId = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         // ServiceCallTimestamp must NOT be set by caller
         if (request.ServiceHeader.ServiceCallTimestamp != null)
@@ -54,7 +54,7 @@ public static class EndpointRouteBuilderExtensions
 
         if (string.IsNullOrWhiteSpace(request.Header.EntryReference))
         {
-            request.Header.EntryReference = GenerateMrn();
+            request.Header.EntryReference = MrnGenerator.GenerateMrn();
             request.Header.EntryVersionNumber = 1;
         }
         else if (request.Header.EntryVersionNumber != null)
@@ -102,7 +102,7 @@ public static class EndpointRouteBuilderExtensions
             return Results.BadRequest("ServiceHeader must not be null");
         }
 
-        request.ServiceHeader.CorrelationId ??= (ulong)DateTime.UtcNow.Ticks;
+        request.ServiceHeader.CorrelationId ??= (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         request.ServiceHeader.ServiceCallTimestamp ??= DateTime.UtcNow;
 
         if (string.IsNullOrWhiteSpace(request.Header?.EntryReference))
@@ -189,7 +189,7 @@ public static class EndpointRouteBuilderExtensions
             return request;
         }
 
-        // JSON path
+        // support JSON of the raw object
         var jsonOptions = httpRequest
             .HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>()
             .Value.SerializerOptions;
@@ -231,17 +231,5 @@ public static class EndpointRouteBuilderExtensions
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return entity;
-    }
-
-    private static readonly char[] s_mrnChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".ToCharArray();
-
-    private static string GenerateMrn()
-    {
-        var yy = (DateTime.UtcNow.Year % 100).ToString("D2");
-        var rnd = new Random();
-        var sb = new StringBuilder();
-        for (var i = 0; i < 14; i++)
-            sb.Append(s_mrnChars[rnd.Next(s_mrnChars.Length)]);
-        return $"{yy}GB{sb}";
     }
 }

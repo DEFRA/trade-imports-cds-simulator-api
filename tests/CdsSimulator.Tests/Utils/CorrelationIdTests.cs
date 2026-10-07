@@ -7,9 +7,7 @@ public class CorrelationIdTests
     [Fact]
     public void CorrelationId_ShouldBeGenerated()
     {
-        var generator = new CorrelationIdGenerator();
-
-        var id = generator.Generate();
+        var id = CorrelationIdGenerator.Generate();
 
         id.Length.Should().Be(20);
     }
