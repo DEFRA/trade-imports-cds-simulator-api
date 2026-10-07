@@ -139,4 +139,75 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
             .Received(1)
             .PostClearanceRequestAsync(Arg.Any<AlvsClearanceRequest>(), Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task Put_WhenServiceHeaderIsNull_ShouldReturnBadRequest()
+    {
+        // Use XML serialization to produce a payload without a ServiceHeader element,
+        // which deserializes to null and exercises the null-check validation path.
+        var request = new AlvsClearanceRequest
+        {
+            ServiceHeader = null,
+            Header = new AlvsClearanceRequestHeader { EntryReference = "TESTMRN12345678", EntryVersionNumber = 1 },
+            Items = [new AlvsClearanceRequestItem { ItemNumber = 1 }],
+        };
+
+        var serializer = new XmlSerializer(typeof(AlvsClearanceRequest));
+        var sb = new StringBuilder();
+        await using (var sw = new StringWriter(sb))
+        {
+            serializer.Serialize(sw, request);
+        }
+
+        var client = CreateClient();
+        var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/clearanceRequest")
+        {
+            Content = new StringContent(sb.ToString(), Encoding.UTF8, "application/xml"),
+        };
+        var response = await client.SendAsync(httpRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Put_WhenEntryReferenceIsMissing_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "header": { "entryVersionNumber": 1 },
+              "items": [ { "itemNumber": 1 } ]
+            }
+            """;
+
+        var client = CreateClient();
+        var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/clearanceRequest")
+        {
+            Content = new StringContent(json, Encoding.UTF8, "application/json"),
+        };
+        var response = await client.SendAsync(httpRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Put_WhenEntryVersionNumberIsMissing_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "header": { "entryReference": "TESTMRN12345678" },
+              "items": [ { "itemNumber": 1 } ]
+            }
+            """;
+
+        var client = CreateClient();
+        var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/clearanceRequest")
+        {
+            Content = new StringContent(json, Encoding.UTF8, "application/json"),
+        };
+        var response = await client.SendAsync(httpRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }

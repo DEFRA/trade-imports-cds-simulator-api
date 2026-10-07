@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Xml.Serialization;
 using AwesomeAssertions;
 using CdsSimulator.BtmsClient;
@@ -67,16 +68,139 @@ public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITest
     }
 
     [Fact]
+    public async Task Post_WhenValidXml_AndNoEntryReference_ShouldAutoGenerateMrn()
+    {
+        var request = new AlvsClearanceRequest
+        {
+            ServiceHeader = new AlvsClearanceRequestServiceHeader { SourceSystem = "ALVS", DestinationSystem = "CDS" },
+            Header = new AlvsClearanceRequestHeader { EntryVersionNumber = null },
+            Items = [new AlvsClearanceRequestItem { ItemNumber = 1 }],
+        };
+
+        var client = CreateClient();
+
+        var serializer = new XmlSerializer(typeof(AlvsClearanceRequest));
+        var sb = new StringBuilder();
+        await using (var sw = new StringWriter(sb))
+        {
+            serializer.Serialize(sw, request);
+        }
+
+        var content = new StringContent(sb.ToString(), Encoding.UTF8, "application/xml");
+        var response = await client.PostAsync(Testing.Endpoints.ClearanceRequests.Post, content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var body = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(body);
+        doc.RootElement.GetProperty("mrn").GetString().Should().NotBeNullOrEmpty();
+        doc.RootElement.GetProperty("entryVersionNumber").GetInt32().Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Post_WhenCorrelationIdAlreadySet_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS", "correlationId": 123 },
+              "header": { "entryVersionNumber": 1 },
+              "items": [ { "itemNumber": 1 } ]
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PostAsync(
+            Testing.Endpoints.ClearanceRequests.Post,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Post_WhenServiceCallTimestampAlreadySet_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS", "serviceCallTimestamp": "2024-01-01T00:00:00Z" },
+              "header": { "entryVersionNumber": 1 },
+              "items": [ { "itemNumber": 1 } ]
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PostAsync(
+            Testing.Endpoints.ClearanceRequests.Post,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Post_WhenEntryVersionNumberNotGreaterThanPreviousVersionNumber_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "header": { "entryReference": "TESTMRN12345678", "entryVersionNumber": 2, "previousVersionNumber": 3 },
+              "items": [ { "itemNumber": 1 } ]
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PostAsync(
+            Testing.Endpoints.ClearanceRequests.Post,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Post_WhenDuplicateMrnAndVersion_ShouldReturnConflict()
+    {
+        // Seed an existing record into the in-memory DB
+        ((Utils.InMemoryData.MemoryCollectionSet<Data.Entities.ClearanceRequest>)_memDb.ClearanceRequests).Insert(
+            new Data.Entities.ClearanceRequest
+            {
+                Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
+                Timestamp = DateTime.UtcNow,
+                Mrn = "TESTMRN12345678",
+                EntryVersionNumber = 1,
+                Xml = "<xml/>",
+            }
+        );
+
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "header": { "entryReference": "TESTMRN12345678", "entryVersionNumber": 1 },
+              "items": [ { "itemNumber": 1 } ]
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PostAsync(
+            Testing.Endpoints.ClearanceRequests.Post,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
     public async Task Post_WhenValidJson_CaseInsensitive_ShouldReturnCreated()
     {
         var client = CreateClient();
 
-        var json =
-            @"{
-          ""serviceHeader"": { ""sourceSystem"": ""ALVS"", ""destinationSystem"": ""CDS"" },
-          ""header"": { ""entryVersionNumber"": 1 },
-          ""items"": [ { ""itemNumber"": 1 } ]
-        }";
+        var json = """
+            {
+              "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "header": { "entryVersionNumber": 1 },
+              "items": [ { "itemNumber": 1 } ]
+            }
+            """;
 
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
