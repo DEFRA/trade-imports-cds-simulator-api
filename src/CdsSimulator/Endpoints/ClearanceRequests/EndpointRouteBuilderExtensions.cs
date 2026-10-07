@@ -7,6 +7,8 @@ using CdsSimulator.BtmsClient;
 using CdsSimulator.BtmsClient.Models;
 using Defra.TradeImportsCdsSimulator.Data;
 using Defra.TradeImportsCdsSimulator.Utils.Mrn;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using ClearanceRequest = Defra.TradeImportsCdsSimulator.Data.Entities.ClearanceRequest;
 
@@ -191,7 +193,7 @@ public static class EndpointRouteBuilderExtensions
 
         // support JSON of the raw object
         var jsonOptions = httpRequest
-            .HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>()
+            .HttpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>()
             .Value.SerializerOptions;
 
         var result = await httpRequest.ReadFromJsonAsync<T>(jsonOptions, cancellationToken);

@@ -196,7 +196,7 @@ public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITest
 
         var json = """
             {
-              "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS" },
               "header": { "entryVersionNumber": 1 },
               "items": [ { "itemNumber": 1 } ]
             }
