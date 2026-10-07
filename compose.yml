@@ -7,7 +7,11 @@ services:
       wiremock:
         condition: service_started
       mongodb:
-        condition: service_healthy    
+        condition: service_healthy
+    env_file:
+      # BTMS Client credentials
+      - path: .env
+        required: false    
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ENVIRONMENT: local
@@ -18,6 +22,8 @@ services:
       Acl__Clients__IntegrationTests__Secret: integration-tests-pwd
       Acl__Clients__IntegrationTests__Scopes__0: read
       Acl__Clients__IntegrationTests__Scopes__1: write
+      BtmsClient__GatewayBaseUrl: http://wiremock:9090
+      BtmsClient__Routes__AlvsClearanceRequest__Path: /ITSW/CDS/SubmitImportDocumentCDSFacadeService
     ports:
       - "8080:8080"
     healthcheck:
