@@ -181,7 +181,7 @@ namespace Defra.TradeImportsCdsSimulator.IntegrationTests.Endpoints.ClearanceReq
                 new StringContent(Decision, Encoding.UTF8, "text/xml")
             );
 
-            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
 
             var btmsRequestPosted = await wireMockClient.WasBtmsClearanceRequestPostedAsync();
             btmsRequestPosted.Should().BeTrue();
