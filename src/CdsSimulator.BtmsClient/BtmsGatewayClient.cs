@@ -37,12 +37,12 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
             throw new ArgumentNullException(nameof(baseUrl));
         if (string.IsNullOrWhiteSpace(path))
             return baseUrl;
-        var baseUri = new System.Uri(baseUrl, System.UriKind.Absolute);
-        var target = new System.Uri(baseUri, path);
+        var baseUri = new Uri(baseUrl, UriKind.Absolute);
+        var target = new Uri(baseUri, path);
         return target.ToString();
     }
 
-    private static string GetRoutePath(IReadOnlyDictionary<string, BtmsClientRoute> routes, string routeName)
+    private static string GetRoutePath(Dictionary<string, BtmsClientRoute> routes, string routeName)
     {
         if (routes.TryGetValue(routeName, out var route))
         {

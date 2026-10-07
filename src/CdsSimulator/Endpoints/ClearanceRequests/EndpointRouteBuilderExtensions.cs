@@ -206,11 +206,6 @@ public static class EndpointRouteBuilderExtensions
         CancellationToken cancellationToken
     )
     {
-        if (request.Header?.EntryReference == null || request.Header?.EntryVersionNumber == null)
-        {
-            throw new InvalidOperationException();
-        }
-
         var serializer = new XmlSerializer(typeof(AlvsClearanceRequest));
         var sb = new StringBuilder();
         await using (var sw = new StringWriter(sb))
@@ -224,8 +219,8 @@ public static class EndpointRouteBuilderExtensions
         {
             Id = ObjectId.GenerateNewId().ToString(),
             Timestamp = DateTime.UtcNow,
-            Mrn = request.Header.EntryReference,
-            EntryVersionNumber = (byte)request.Header.EntryVersionNumber,
+            Mrn = request.Header!.EntryReference!,
+            EntryVersionNumber = (byte)request.Header!.EntryVersionNumber!,
             Xml = xml,
         };
 
