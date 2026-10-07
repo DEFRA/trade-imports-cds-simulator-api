@@ -1,3 +1,4 @@
+using AwesomeAssertions;
 using Defra.TradeImportsCdsSimulator.Utils.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 

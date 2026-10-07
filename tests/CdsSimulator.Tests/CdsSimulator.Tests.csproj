@@ -8,10 +8,6 @@
     <RootNamespace>Defra.TradeImportsCdsSimulator.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Using Include="Xunit" />
-    <Using Include="FluentAssertions" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="AwesomeAssertions" Version="9.6.0" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" Version="9.8.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.8" />

@@ -9,8 +9,8 @@ public class MemoryDbContext : IDbContext
 
     public IMongoCollectionSet<Notification> ErrorNotifications { get; } = new MemoryCollectionSet<Notification>();
 
-    public IMongoCollectionSet<Defra.TradeImportsCdsSimulator.Data.Entities.ClearanceRequest> ClearanceRequests { get; } =
-        new MemoryCollectionSet<Defra.TradeImportsCdsSimulator.Data.Entities.ClearanceRequest>();
+    public IMongoCollectionSet<ClearanceRequest> ClearanceRequests { get; } =
+        new MemoryCollectionSet<ClearanceRequest>();
 
     public Task SaveChangesAsync(CancellationToken cancellationToken)
     {

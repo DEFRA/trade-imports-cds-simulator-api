@@ -1,3 +1,4 @@
+using AwesomeAssertions;
 using Defra.TradeImportsCdsSimulator.Utils.CorrelationId;
 
 namespace Defra.TradeImportsCdsSimulator.Tests.Utils;

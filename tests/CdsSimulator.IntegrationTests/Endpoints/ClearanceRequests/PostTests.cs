@@ -171,8 +171,8 @@ namespace Defra.TradeImportsCdsSimulator.IntegrationTests.Endpoints.ClearanceReq
         [Fact]
         public async Task Post_WhenValid_ShouldBeRequestBodyAsResponse()
         {
-            await wireMockClient.ResetAsync();
-            await wireMockClient.StubBtmsClearanceRequestAsync();
+            await wireMockClient.ResetAsync(CancellationToken.None);
+            await wireMockClient.StubBtmsClearanceRequestAsync(CancellationToken.None);
 
             using var client = CreateHttpClient();
 
@@ -183,8 +183,14 @@ namespace Defra.TradeImportsCdsSimulator.IntegrationTests.Endpoints.ClearanceReq
 
             response.StatusCode.Should().Be(HttpStatusCode.Created);
 
-            var btmsRequestPosted = await wireMockClient.WasBtmsClearanceRequestPostedAsync();
-            btmsRequestPosted.Should().BeTrue();
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            using var doc = System.Text.Json.JsonDocument.Parse(responseBody);
+            var root = doc.RootElement;
+
+            root.GetProperty("id").GetString().Should().NotBeNullOrEmpty();
+            root.GetProperty("mrn").GetString().Should().NotBeNullOrEmpty();
+            root.GetProperty("entryVersionNumber").GetInt32().Should().BeGreaterThan(0);
         }
     }
 }

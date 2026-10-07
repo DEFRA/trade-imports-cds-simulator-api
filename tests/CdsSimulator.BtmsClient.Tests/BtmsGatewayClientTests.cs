@@ -1,6 +1,7 @@
 using System.Net;
 using AwesomeAssertions;
 using CdsSimulator.BtmsClient.Models;
+using Xunit;
 
 namespace CdsSimulator.BtmsClient.Tests;
 
@@ -55,7 +56,7 @@ public class BtmsGatewayClientTests
         };
 
         // Act
-        var resp = await client.PostClearanceRequestAsync(requestModel);
+        var resp = await client.PostClearanceRequestAsync(requestModel, CancellationToken.None);
 
         // Assert
         resp.StatusCode.Should().Be(HttpStatusCode.OK);

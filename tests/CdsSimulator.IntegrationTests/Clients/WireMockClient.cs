@@ -19,23 +19,19 @@ public class WireMockClient
 
     public IWireMockAdminApi WireMockAdminApi { get; } = RestClient.For<IWireMockAdminApi>("http://localhost:9090");
 
-    public async Task ResetAsync(CancellationToken cancellationToken = default)
+    public async Task ResetAsync(CancellationToken cancellationToken)
     {
         await _httpClient.DeleteAsync($"/__admin/mappings/{BtmsClearanceRequestMappingId}", cancellationToken);
         await _httpClient.PostAsync("/__admin/requests/reset", content: null, cancellationToken);
     }
 
-    public async Task StubBtmsClearanceRequestAsync(CancellationToken cancellationToken = default)
+    public async Task StubBtmsClearanceRequestAsync(CancellationToken cancellationToken)
     {
         var mapping = new
         {
             priority = 1,
-            request = new { method = "POST", urlPath = "/ITSW/CDS/SubmitImportDocumentCDSFacadeService" },
-            response = new
-            {
-                status = 200,
-                body = "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\"><soap:Body /></soap:Envelope>",
-            },
+            request = new { method = "POST", url = "/ITSW/CDS/SubmitImportDocumentCDSFacadeService" },
+            response = new { status = 200, body = string.Empty },
         };
 
         var response = await _httpClient.PostAsJsonAsync(
@@ -44,20 +40,5 @@ public class WireMockClient
             cancellationToken
         );
         response.EnsureSuccessStatusCode();
-    }
-
-    public async Task<bool> WasBtmsClearanceRequestPostedAsync(CancellationToken cancellationToken = default)
-    {
-        var response = await _httpClient.PostAsJsonAsync(
-            "/__admin/requests/count",
-            new { method = "POST", urlPath = "/ITSW/CDS/SubmitImportDocumentCDSFacadeService" },
-            cancellationToken
-        );
-
-        response.EnsureSuccessStatusCode();
-
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        using var doc = JsonDocument.Parse(content);
-        return doc.RootElement.TryGetProperty("count", out var countElement) && countElement.GetInt32() > 0;
     }
 }

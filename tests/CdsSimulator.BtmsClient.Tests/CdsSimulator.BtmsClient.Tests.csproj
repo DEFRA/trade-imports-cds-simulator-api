@@ -16,7 +16,4 @@
     <ProjectReference Include="..\..\src\CdsSimulator.BtmsClient\CdsSimulator.BtmsClient.csproj" />
     <ProjectReference Include="..\..\src\CdsSimulator\CdsSimulator.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Using Include="Xunit" />
-  </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
 using System.Diagnostics.Metrics;
+using AwesomeAssertions;
 using Defra.TradeImportsCdsSimulator.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
