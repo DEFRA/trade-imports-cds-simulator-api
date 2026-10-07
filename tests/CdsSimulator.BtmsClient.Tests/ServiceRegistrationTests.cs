@@ -67,7 +67,9 @@ namespace CdsSimulator.BtmsClient.Tests
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        public void AddBtmsClient_WhenGatewayBaseUrlIsNullOrWhiteSpace_DoesNotSetHttpClientBaseAddress(string? gatewayBaseUrl)
+        public void AddBtmsClient_WhenGatewayBaseUrlIsNullOrWhiteSpace_DoesNotSetHttpClientBaseAddress(
+            string? gatewayBaseUrl
+        )
         {
             var inMemory = new Dictionary<string, string?>
             {
