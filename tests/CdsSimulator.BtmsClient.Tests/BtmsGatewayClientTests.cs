@@ -74,8 +74,7 @@ public class BtmsGatewayClientTests
 
         var act = () => client.PostClearanceRequestAsync(CreateRequestModel(), CancellationToken.None);
 
-        await act
-            .Should()
+        await act.Should()
             .ThrowAsync<KeyNotFoundException>()
             .WithMessage("Route 'AlvsClearanceRequest' was not configured under BtmsClient:Routes.");
     }
