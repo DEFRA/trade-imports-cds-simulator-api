@@ -200,7 +200,7 @@ public static class EndpointRouteBuilderExtensions
         return result ?? throw new InvalidOperationException($"Unable to deserialize JSON to {typeof(T).FullName}");
     }
 
-    public static async Task<ClearanceRequest> SaveClearanceRequest(
+    private static async Task<ClearanceRequest> SaveClearanceRequest(
         AlvsClearanceRequest request,
         IDbContext dbContext,
         CancellationToken cancellationToken
@@ -220,7 +220,7 @@ public static class EndpointRouteBuilderExtensions
             Id = ObjectId.GenerateNewId().ToString(),
             Timestamp = DateTime.UtcNow,
             Mrn = request.Header!.EntryReference!,
-            EntryVersionNumber = (byte)request.Header!.EntryVersionNumber!,
+            EntryVersionNumber = (byte)request.Header.EntryVersionNumber!,
             Xml = xml,
         };
 

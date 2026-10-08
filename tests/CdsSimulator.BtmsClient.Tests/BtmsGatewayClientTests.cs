@@ -16,7 +16,6 @@ public class BtmsGatewayClientTests
         var handler = new CaptureHandler(
             (req, ct) =>
             {
-                // capture content
                 capturedBody = req.Content?.ReadAsStringAsync(ct).Result;
                 return Task.FromResult(
                     new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("OK") }
@@ -42,7 +41,48 @@ public class BtmsGatewayClientTests
 
         var client = new BtmsGatewayClient(httpClient, btmsOptions);
 
-        var requestModel = new AlvsClearanceRequest
+        // Act
+        var resp = await client.PostClearanceRequestAsync(CreateRequestModel(), CancellationToken.None);
+
+        // Assert
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        capturedBody.Should().NotBeNullOrEmpty();
+        capturedBody.Should().Contain("<ALVSClearanceRequest");
+        capturedBody.Should().Contain("<oas:Username>test-username</oas:Username>");
+        capturedBody.Should().Contain("<oas:Password");
+        capturedBody.Should().Contain(password);
+    }
+
+    [Fact]
+    public async Task PostClearanceRequestAsync_WhenRouteIsMissing_ThrowsKeyNotFoundException()
+    {
+        var handler = new CaptureHandler((req, ct) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
+
+        var client = new BtmsGatewayClient(
+            new HttpClient(handler),
+            new BtmsClientOptions
+            {
+                GatewayBaseUrl = "http://localhost:1234",
+                UsernameToken = "user",
+                Password = "pass",
+                Routes = new Dictionary<string, BtmsClientRoute>
+                {
+                    ["SomeOtherRoute"] = new BtmsClientRoute { Path = "/x" },
+                },
+            }
+        );
+
+        var act = () => client.PostClearanceRequestAsync(CreateRequestModel(), CancellationToken.None);
+
+        await act
+            .Should()
+            .ThrowAsync<KeyNotFoundException>()
+            .WithMessage("Route 'AlvsClearanceRequest' was not configured under BtmsClient:Routes.");
+    }
+
+    private static AlvsClearanceRequest CreateRequestModel()
+    {
+        return new AlvsClearanceRequest
         {
             ServiceHeader = new AlvsClearanceRequestServiceHeader
             {
@@ -54,18 +94,6 @@ public class BtmsGatewayClientTests
             Header = new AlvsClearanceRequestHeader { EntryReference = "290-000151G-02/01/2022" },
             Items = [new AlvsClearanceRequestItem { ItemNumber = 1 }],
         };
-
-        // Act
-        var resp = await client.PostClearanceRequestAsync(requestModel, CancellationToken.None);
-
-        // Assert
-        resp.StatusCode.Should().Be(HttpStatusCode.OK);
-        capturedBody.Should().NotBeNullOrEmpty();
-        capturedBody.Should().Contain("<ALVSClearanceRequest");
-        // header username should be XML-escaped inside username element
-        capturedBody.Should().Contain("<oas:Username>test-username</oas:Username>");
-        capturedBody.Should().Contain("<oas:Password");
-        capturedBody.Should().Contain(password);
     }
 
     private class CaptureHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> onSend)

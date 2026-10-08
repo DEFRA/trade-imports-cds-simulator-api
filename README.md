@@ -85,7 +85,6 @@ Submits a new clearance request. The simulator assigns a `CorrelationId` and `Se
 
 Updates an existing clearance request (used for test injection). Unlike the POST endpoint, the caller must supply a complete `ServiceHeader`.
 
-- **Authentication:** Basic Auth with `write` scope
 - **Content-Type:** XML, SOAP, or JSON
 - **Validation rules:**
   - `ServiceHeader` **must** be present.
