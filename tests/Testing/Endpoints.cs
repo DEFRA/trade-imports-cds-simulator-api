@@ -5,6 +5,13 @@ namespace Defra.TradeImportsCdsSimulator.Testing;
 
 public static class Endpoints
 {
+    public static class ClearanceRequests
+    {
+        public static string Post => "ws/CDS/defra/alvsclearancerequestinbound/v1";
+
+        public static string Put => "clearanceRequest";
+    }
+
     public static class DecisionNotifications
     {
         public static string Post => "ws/CDS/defra/alvsclearanceinbound/v1";

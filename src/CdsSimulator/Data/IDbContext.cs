@@ -8,5 +8,7 @@ public interface IDbContext
 
     IMongoCollectionSet<Notification> ErrorNotifications { get; }
 
+    IMongoCollectionSet<ClearanceRequest> ClearanceRequests { get; }
+
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

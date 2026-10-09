@@ -16,6 +16,10 @@ public class MongoDbContext : IDbContext
         Database = database;
         DecisionNotifications = new MongoCollectionSet<Notification>(this, nameof(DecisionNotifications));
         ErrorNotifications = new MongoCollectionSet<Notification>(this, nameof(ErrorNotifications));
+        ClearanceRequests = new MongoCollectionSet<Defra.TradeImportsCdsSimulator.Data.Entities.ClearanceRequest>(
+            this,
+            nameof(ClearanceRequests)
+        );
     }
 
     internal IMongoDatabase Database { get; }
@@ -24,12 +28,15 @@ public class MongoDbContext : IDbContext
 
     public IMongoCollectionSet<Notification> ErrorNotifications { get; }
 
+    public IMongoCollectionSet<Defra.TradeImportsCdsSimulator.Data.Entities.ClearanceRequest> ClearanceRequests { get; }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         try
         {
             await DecisionNotifications.Save(cancellationToken);
             await ErrorNotifications.Save(cancellationToken);
+            await ClearanceRequests.Save(cancellationToken);
         }
         catch (MongoCommandException mongoCommandException) when (mongoCommandException.Code == 112)
         {

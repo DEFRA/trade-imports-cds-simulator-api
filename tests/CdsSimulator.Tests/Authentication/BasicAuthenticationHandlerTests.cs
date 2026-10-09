@@ -1,4 +1,5 @@
 using System.Text;
+using AwesomeAssertions;
 using Defra.TradeImportsCdsSimulator.Authentication;
 using Defra.TradeImportsCdsSimulator.Configuration;
 using Microsoft.AspNetCore.Authentication;

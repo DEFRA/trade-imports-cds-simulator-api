@@ -1,7 +1,9 @@
+using CdsSimulator.BtmsClient;
 using Defra.TradeImportsCdsSimulator.Authentication;
 using Defra.TradeImportsCdsSimulator.Data.Entities;
 using Defra.TradeImportsCdsSimulator.Data.Extensions;
 using Defra.TradeImportsCdsSimulator.Endpoints;
+using Defra.TradeImportsCdsSimulator.Endpoints.ClearanceRequests;
 using Defra.TradeImportsCdsSimulator.Endpoints.Decisions;
 using Defra.TradeImportsCdsSimulator.Endpoints.OutboundErrors;
 using Defra.TradeImportsCdsSimulator.Extensions;
@@ -70,6 +72,10 @@ static void ConfigureWebApplication(WebApplicationBuilder builder, string[] args
 
     builder.Services.AddValidatorsFromAssemblyContaining<GetQuery>();
 
+    // Enable BTMS client and case-insensitive JSON on minimal API endpoints
+    builder.Services.AddBtmsClient(builder.Configuration);
+    builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.PropertyNameCaseInsensitive = true);
+
     builder.Services.AddDbContext(builder.Configuration, integrationTest);
 }
 
@@ -82,6 +88,8 @@ static WebApplication BuildWebApplication(WebApplicationBuilder builder)
     app.UseStatusCodePages();
     app.UseHeaderPropagation();
     app.UseMiddleware<MetricsMiddleware>();
+
+    app.MapClearanceRequestEndpoints();
     app.MapDecisionEndpoints();
     app.MapErrorEndpoints();
     app.UseExceptionHandler(

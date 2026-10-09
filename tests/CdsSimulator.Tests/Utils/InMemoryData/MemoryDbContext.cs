@@ -9,8 +9,11 @@ public class MemoryDbContext : IDbContext
 
     public IMongoCollectionSet<Notification> ErrorNotifications { get; } = new MemoryCollectionSet<Notification>();
 
+    public IMongoCollectionSet<ClearanceRequest> ClearanceRequests { get; } =
+        new MemoryCollectionSet<ClearanceRequest>();
+
     public Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 }

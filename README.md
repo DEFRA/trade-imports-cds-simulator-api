@@ -52,6 +52,69 @@ Retrieves stored error notifications. Same query parameters, validation rules, a
 
 - **Authentication:** Basic Auth with `read` scope
 
+### Clearance Requests
+
+The simulator exposes two endpoints that accept an `ALVSClearanceRequest` payload, persist it to MongoDB, and forward it to the configured BTMS gateway.
+
+All three content types are accepted:
+
+| `Content-Type`      | Description |
+|---------------------|-------------|
+| `application/xml`   | Plain XML body |
+| `application/json`  | JSON representation of the model |
+| `text/xml` / `application/soap+xml` | SOAP envelope wrapping the XML payload |
+
+#### `POST ws/CDS/defra/alvsclearancerequestinbound/v1`
+
+Submits a new clearance request. The simulator assigns a `CorrelationId` and `ServiceCallTimestamp` automatically.
+
+- **Authentication:** Basic Auth with `write` scope
+- **Content-Type:** XML, SOAP, or JSON
+- **Validation rules:**
+  - `ServiceHeader.CorrelationId` **must not** be set by the caller — the simulator generates it.
+  - `ServiceHeader.ServiceCallTimestamp` **must not** be set by the caller — the simulator generates it.
+  - If `Header.EntryReference` is omitted, the simulator auto-generates an MRN and sets `EntryVersionNumber` to `1`.
+  - If `Header.EntryVersionNumber` is provided alongside `Header.PreviousVersionNumber`, the version number must be strictly greater than the previous version number.
+  - A request with the same `EntryReference` and `EntryVersionNumber` as an existing record is rejected as a duplicate.
+- **Responses:**
+  - `201 Created` — request stored and forwarded to BTMS; response body is a [ClearanceRequest](#clearancerequest-model) object.
+  - `400 Bad Request` — validation failure (see rules above).
+  - `409 Conflict` — duplicate MRN + version combination already exists.
+
+#### `PUT clearanceRequest`
+
+Updates an existing clearance request (used for test injection). Unlike the POST endpoint, the caller must supply a complete `ServiceHeader`.
+
+- **Content-Type:** XML, SOAP, or JSON
+- **Validation rules:**
+  - `ServiceHeader` **must** be present.
+  - `Header.EntryReference` **must** be set.
+  - `Header.EntryVersionNumber` **must** be set.
+  - `CorrelationId` and `ServiceCallTimestamp` are defaulted by the simulator if not supplied.
+- **Responses:**
+  - `204 No Content` — request stored and forwarded to BTMS.
+  - `400 Bad Request` — validation failure (see rules above).
+
+### Clearance Request Model
+
+```json
+{
+  "id": "string",
+  "timestamp": "2024-01-01T00:00:00Z",
+  "mrn": "string",
+  "entryVersionNumber": 1,
+  "xml": "string"
+}
+```
+
+| Field                | Type       | Description |
+|----------------------|------------|-------------|
+| `id`                 | `string`   | MongoDB document ID |
+| `timestamp`          | `DateTime` | UTC timestamp when the request was stored |
+| `mrn`                | `string`   | Movement Reference Number (`Header.EntryReference`) |
+| `entryVersionNumber` | `byte`     | Version number of the entry |
+| `xml`                | `string`   | Serialised XML of the stored `ALVSClearanceRequest` |
+
 ### Health Checks
 
 | Endpoint             | Authentication | Description |
@@ -102,7 +165,7 @@ Clients and their scopes are configured in `appsettings.json` under the `Acl` se
 | Scope   | Grants access to |
 |---------|------------------|
 | `read`  | `GET decision-notifications`, `GET error-notifications` |
-| `write` | Reserved for future use |
+| `write` | `POST ws/CDS/defra/alvsclearancerequestinbound/v1`, `PUT clearanceRequest` |
 
 
 ## Docker Compose
