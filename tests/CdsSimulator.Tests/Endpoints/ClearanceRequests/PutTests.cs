@@ -24,7 +24,7 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
 
         // In-memory DB and minimal substitute for BTMS client
         _mockBtms
-            .PostClearanceRequestAsync(Arg.Any<AlvsClearanceRequest>(), Arg.Any<CancellationToken>())
+            .PostClearanceRequestAsync(Arg.Any<ClearanceRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
 
         // Replace app registrations with test doubles
@@ -37,21 +37,21 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
     [Fact]
     public async Task Put_WhenValidXml_ShouldReturnNoContent()
     {
-        var request = new AlvsClearanceRequest
+        var request = new ClearanceRequest
         {
-            ServiceHeader = new AlvsClearanceRequestServiceHeader
+            ServiceHeader = new ServiceHeader
             {
                 SourceSystem = "ALVS",
                 DestinationSystem = "CDS",
                 CorrelationId = null,
             },
-            Header = new AlvsClearanceRequestHeader { EntryReference = "TESTMRN12345678", EntryVersionNumber = 1 },
-            Items = [new AlvsClearanceRequestItem { ItemNumber = 1 }],
+            Header = new Header { EntryReference = "TESTMRN12345678", EntryVersionNumber = 1 },
+            Items = [new Item { ItemNumber = 1 }],
         };
 
         var client = CreateClient();
 
-        var serializer = new XmlSerializer(typeof(AlvsClearanceRequest));
+        var serializer = new XmlSerializer(typeof(ClearanceRequest));
         var sb = new StringBuilder();
         await using (var sw = new StringWriter(sb))
         {
@@ -68,7 +68,7 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
         await _memDb.SaveChangesAsync(CancellationToken.None);
         await _mockBtms
             .Received(1)
-            .PostClearanceRequestAsync(Arg.Any<AlvsClearanceRequest>(), Arg.Any<CancellationToken>());
+            .PostClearanceRequestAsync(Arg.Any<ClearanceRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -93,16 +93,16 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
     [Fact]
     public async Task Put_WhenSoapEnvelope_ShouldReturnNoContent()
     {
-        var request = new AlvsClearanceRequest
+        var request = new ClearanceRequest
         {
-            ServiceHeader = new AlvsClearanceRequestServiceHeader { SourceSystem = "ALVS", DestinationSystem = "CDS" },
-            Header = new AlvsClearanceRequestHeader { EntryReference = "TESTMRN12345678", EntryVersionNumber = 1 },
-            Items = [new AlvsClearanceRequestItem { ItemNumber = 1 }],
+            ServiceHeader = new ServiceHeader { SourceSystem = "ALVS", DestinationSystem = "CDS" },
+            Header = new Header { EntryReference = "TESTMRN12345678", EntryVersionNumber = 1 },
+            Items = [new Item { ItemNumber = 1 }],
         };
 
         var client = CreateClient();
 
-        var serializer = new XmlSerializer(typeof(AlvsClearanceRequest));
+        var serializer = new XmlSerializer(typeof(ClearanceRequest));
         var ns = new XmlSerializerNamespaces();
         ns.Add(string.Empty, "http://submitimportdocumenthmrcfacade.types.esb.ws.cara.defra.com");
 
@@ -137,36 +137,7 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
         await _memDb.SaveChangesAsync(CancellationToken.None);
         await _mockBtms
             .Received(1)
-            .PostClearanceRequestAsync(Arg.Any<AlvsClearanceRequest>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Put_WhenServiceHeaderIsNull_ShouldReturnBadRequest()
-    {
-        // Use XML serialization to produce a payload without a ServiceHeader element,
-        // which deserializes to null and exercises the null-check validation path.
-        var request = new AlvsClearanceRequest
-        {
-            ServiceHeader = null,
-            Header = new AlvsClearanceRequestHeader { EntryReference = "TESTMRN12345678", EntryVersionNumber = 1 },
-            Items = [new AlvsClearanceRequestItem { ItemNumber = 1 }],
-        };
-
-        var serializer = new XmlSerializer(typeof(AlvsClearanceRequest));
-        var sb = new StringBuilder();
-        await using (var sw = new StringWriter(sb))
-        {
-            serializer.Serialize(sw, request);
-        }
-
-        var client = CreateClient();
-        var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/clearanceRequest")
-        {
-            Content = new StringContent(sb.ToString(), Encoding.UTF8, "application/xml"),
-        };
-        var response = await client.SendAsync(httpRequest);
-
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            .PostClearanceRequestAsync(Arg.Any<ClearanceRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

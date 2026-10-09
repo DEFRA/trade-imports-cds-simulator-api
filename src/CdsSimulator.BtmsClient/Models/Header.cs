@@ -1,17 +1,16 @@
-using System.ComponentModel;
-using System.Xml.Serialization;
+using System.Text.Json.Serialization;
 
 namespace CdsSimulator.BtmsClient.Models;
 
-[Serializable]
-[DesignerCategory("code")]
-[XmlType(TypeName = "ALVSClearanceRequestHeader")]
-public class AlvsClearanceRequestHeader
+public class Header
 {
+    [JsonPropertyName("entryReference")]
     public string? EntryReference { get; set; }
 
-    public byte? EntryVersionNumber { get; set; }
+    [JsonPropertyName("entryVersionNumber")]
+    public int? EntryVersionNumber { get; set; }
 
+    [JsonPropertyName("previousVersionNumber")]
     public byte? PreviousVersionNumber { get; set; }
 
     public string? DeclarationUCR { get; set; }

@@ -1,18 +1,24 @@
-using System.ComponentModel;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace CdsSimulator.BtmsClient.Models;
 
 [Serializable]
-[DesignerCategory("code")]
 [XmlType(TypeName = "ALVSClearanceRequestItemDocument")]
-public class AlvsClearanceRequestItemDocument
+public class Document
 {
+    [JsonPropertyName("documentCode")]
     public string? DocumentCode { get; set; }
 
+    [JsonPropertyName("documentReference")]
     public string? DocumentReference { get; set; }
 
+    [JsonPropertyName("documentStatus")]
     public string? DocumentStatus { get; set; }
 
+    [JsonPropertyName("documentControl")]
     public string? DocumentControl { get; set; }
+
+    [JsonPropertyName("documentQuantity")]
+    public decimal? DocumentQuantity { get; set; }
 }

@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 using CdsSimulator.BtmsClient;
 using CdsSimulator.BtmsClient.Models;
 using Defra.TradeImportsCdsSimulator.Data;
+using Defra.TradeImportsCdsSimulator.Utils.CorrelationId;
 using Defra.TradeImportsCdsSimulator.Utils.Mrn;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
@@ -31,10 +32,10 @@ public static class EndpointRouteBuilderExtensions
         CancellationToken cancellationToken
     )
     {
-        var request = await NegotiateRequest<AlvsClearanceRequest>(httpRequest, cancellationToken);
-
-        // POST-specific validation / defaults
-        request.ServiceHeader ??= new AlvsClearanceRequestServiceHeader();
+        var request = await NegotiateRequest<CdsSimulator.BtmsClient.Models.ClearanceRequest>(
+            httpRequest,
+            cancellationToken
+        );
 
         // CorrelationId must NOT be set by caller
         if (request.ServiceHeader.CorrelationId != null)
@@ -42,7 +43,7 @@ public static class EndpointRouteBuilderExtensions
             return Results.BadRequest("ServiceHeader.CorrelationId must not be set");
         }
 
-        request.ServiceHeader.CorrelationId = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        request.ServiceHeader.CorrelationId = CorrelationIdGenerator.Generate();
 
         // ServiceCallTimestamp must NOT be set by caller
         if (request.ServiceHeader.ServiceCallTimestamp != null)
@@ -52,7 +53,7 @@ public static class EndpointRouteBuilderExtensions
 
         request.ServiceHeader.ServiceCallTimestamp = DateTime.UtcNow;
 
-        request.Header ??= new AlvsClearanceRequestHeader();
+        request.Header ??= new Header();
 
         if (string.IsNullOrWhiteSpace(request.Header.EntryReference))
         {
@@ -96,7 +97,10 @@ public static class EndpointRouteBuilderExtensions
         CancellationToken cancellationToken
     )
     {
-        var request = await NegotiateRequest<AlvsClearanceRequest>(httpRequest, cancellationToken);
+        var request = await NegotiateRequest<CdsSimulator.BtmsClient.Models.ClearanceRequest>(
+            httpRequest,
+            cancellationToken
+        );
 
         // PUT (test) has different validation requirements
         if (request.ServiceHeader == null)
@@ -104,7 +108,7 @@ public static class EndpointRouteBuilderExtensions
             return Results.BadRequest("ServiceHeader must not be null");
         }
 
-        request.ServiceHeader.CorrelationId ??= (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        request.ServiceHeader.CorrelationId ??= CorrelationIdGenerator.Generate();
         request.ServiceHeader.ServiceCallTimestamp ??= DateTime.UtcNow;
 
         if (string.IsNullOrWhiteSpace(request.Header?.EntryReference))
@@ -201,12 +205,12 @@ public static class EndpointRouteBuilderExtensions
     }
 
     private static async Task<ClearanceRequest> SaveClearanceRequest(
-        AlvsClearanceRequest request,
+        CdsSimulator.BtmsClient.Models.ClearanceRequest request,
         IDbContext dbContext,
         CancellationToken cancellationToken
     )
     {
-        var serializer = new XmlSerializer(typeof(AlvsClearanceRequest));
+        var serializer = new XmlSerializer(typeof(CdsSimulator.BtmsClient.Models.ClearanceRequest));
         var sb = new StringBuilder();
         await using (var sw = new StringWriter(sb))
         {

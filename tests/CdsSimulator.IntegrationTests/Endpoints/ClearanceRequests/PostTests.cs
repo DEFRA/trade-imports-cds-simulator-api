@@ -26,8 +26,6 @@ namespace Defra.TradeImportsCdsSimulator.IntegrationTests.Endpoints.ClearanceReq
             	        <ServiceHeader>
             		        <SourceSystem>CHIEF</SourceSystem>
             		        <DestinationSystem>ALVS</DestinationSystem>
-            		        <CorrelationId></CorrelationId>
-            		        <ServiceCallTimestamp></ServiceCallTimestamp>
             	        </ServiceHeader>
             	        <Header>
             		        <EntryReference></EntryReference>

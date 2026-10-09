@@ -5,7 +5,7 @@ namespace CdsSimulator.BtmsClient;
 public interface IBtmsGatewayClient
 {
     Task<HttpResponseMessage> PostClearanceRequestAsync(
-        AlvsClearanceRequest request,
+        ClearanceRequest request,
         CancellationToken cancellationToken = default
     );
 }

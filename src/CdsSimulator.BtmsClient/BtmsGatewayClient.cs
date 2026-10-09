@@ -14,7 +14,7 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
     private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
     public async Task<HttpResponseMessage> PostClearanceRequestAsync(
-        AlvsClearanceRequest request,
+        ClearanceRequest request,
         CancellationToken cancellationToken = default
     )
     {
@@ -60,7 +60,7 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         throw new KeyNotFoundException($"Route '{routeName}' was not configured under BtmsClient:Routes.");
     }
 
-    private static string BuildSoapEnvelope(AlvsClearanceRequest request, string? usernameToken, string? password)
+    private static string BuildSoapEnvelope(ClearanceRequest request, string? usernameToken, string? password)
     {
         var bodyXml = SerializeObjectToXml(request);
 
