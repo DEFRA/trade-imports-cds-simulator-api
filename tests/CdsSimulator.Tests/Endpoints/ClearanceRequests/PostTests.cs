@@ -1,10 +1,11 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Xml;
 using System.Xml.Serialization;
 using AwesomeAssertions;
+using BtmsGateway.Contract.CustomsDeclarations;
 using CdsSimulator.BtmsClient;
-using CdsSimulator.BtmsClient.Models;
 using Defra.TradeImportsCdsSimulator.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -41,7 +42,7 @@ public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITest
         var request = new ClearanceRequest
         {
             ServiceHeader = new ServiceHeader { SourceSystem = "ALVS", DestinationSystem = "CDS" },
-            Header = new Header { EntryVersionNumber = 1 },
+            Header = new ClearanceRequestHeader { EntryVersionNumber = 1 },
             Items = [new Item { ItemNumber = 1 }],
         };
 
@@ -73,7 +74,7 @@ public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITest
         var request = new ClearanceRequest
         {
             ServiceHeader = new ServiceHeader { SourceSystem = "ALVS", DestinationSystem = "CDS" },
-            Header = new Header { EntryVersionNumber = null },
+            Header = new ClearanceRequestHeader { EntryVersionNumber = null },
             Items = [new Item { ItemNumber = 1 }],
         };
 
@@ -215,7 +216,7 @@ public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITest
         var request = new ClearanceRequest
         {
             ServiceHeader = new ServiceHeader { SourceSystem = "ALVS", DestinationSystem = "CDS" },
-            Header = new Header { EntryVersionNumber = 1 },
+            Header = new ClearanceRequestHeader { EntryVersionNumber = 1 },
             Items = [new Item { ItemNumber = 1 }],
         };
 
@@ -227,9 +228,14 @@ public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITest
         ns.Add(string.Empty, "http://submitimportdocumenthmrcfacade.types.esb.ws.cara.defra.com");
 
         var sb = new StringBuilder();
-        var settings = new System.Xml.XmlWriterSettings { OmitXmlDeclaration = true, Encoding = Encoding.UTF8 };
+        var settings = new XmlWriterSettings
+        {
+            OmitXmlDeclaration = true,
+            Encoding = Encoding.UTF8,
+            Async = true,
+        };
         await using (var sw = new StringWriter(sb))
-        using (var xw = System.Xml.XmlWriter.Create(sw, settings))
+        await using (var xw = XmlWriter.Create(sw, settings))
         {
             serializer.Serialize(xw, request, ns);
         }
@@ -241,7 +247,7 @@ public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITest
                  <soap:Header>
                      <oas:Security soap:role="system" soap:mustUnderstand="true">
                          <oas:UsernameToken></oas:UsernameToken>
-                     </oas:Security>`
+                     </oas:Security>
                  </soap:Header>
                  <soap:Body>{innerXml}</soap:Body>
             </soap:Envelope>

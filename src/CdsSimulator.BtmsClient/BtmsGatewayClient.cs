@@ -3,7 +3,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using CdsSimulator.BtmsClient.Models;
+using BtmsGateway.Contract.CustomsDeclarations;
 
 namespace CdsSimulator.BtmsClient;
 

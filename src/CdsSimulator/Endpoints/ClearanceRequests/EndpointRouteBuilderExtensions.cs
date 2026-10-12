@@ -3,15 +3,15 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using BtmsGateway.Contract.CustomsDeclarations;
 using CdsSimulator.BtmsClient;
-using CdsSimulator.BtmsClient.Models;
 using Defra.TradeImportsCdsSimulator.Data;
 using Defra.TradeImportsCdsSimulator.Utils.CorrelationId;
 using Defra.TradeImportsCdsSimulator.Utils.Mrn;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
-using ClearanceRequest = Defra.TradeImportsCdsSimulator.Data.Entities.ClearanceRequest;
+using DbEntities = Defra.TradeImportsCdsSimulator.Data.Entities;
 
 namespace Defra.TradeImportsCdsSimulator.Endpoints.ClearanceRequests;
 
@@ -32,10 +32,7 @@ public static class EndpointRouteBuilderExtensions
         CancellationToken cancellationToken
     )
     {
-        var request = await NegotiateRequest<CdsSimulator.BtmsClient.Models.ClearanceRequest>(
-            httpRequest,
-            cancellationToken
-        );
+        var request = await NegotiateRequest<ClearanceRequest>(httpRequest, cancellationToken);
 
         // CorrelationId must NOT be set by caller
         if (request.ServiceHeader.CorrelationId != null)
@@ -52,8 +49,6 @@ public static class EndpointRouteBuilderExtensions
         }
 
         request.ServiceHeader.ServiceCallTimestamp = DateTime.UtcNow;
-
-        request.Header ??= new Header();
 
         if (string.IsNullOrWhiteSpace(request.Header.EntryReference))
         {
@@ -97,10 +92,7 @@ public static class EndpointRouteBuilderExtensions
         CancellationToken cancellationToken
     )
     {
-        var request = await NegotiateRequest<CdsSimulator.BtmsClient.Models.ClearanceRequest>(
-            httpRequest,
-            cancellationToken
-        );
+        var request = await NegotiateRequest<ClearanceRequest>(httpRequest, cancellationToken);
 
         // PUT (test) has different validation requirements
         if (request.ServiceHeader == null)
@@ -204,13 +196,13 @@ public static class EndpointRouteBuilderExtensions
         return result ?? throw new InvalidOperationException($"Unable to deserialize JSON to {typeof(T).FullName}");
     }
 
-    private static async Task<ClearanceRequest> SaveClearanceRequest(
-        CdsSimulator.BtmsClient.Models.ClearanceRequest request,
+    private static async Task<DbEntities.ClearanceRequest> SaveClearanceRequest(
+        ClearanceRequest request,
         IDbContext dbContext,
         CancellationToken cancellationToken
     )
     {
-        var serializer = new XmlSerializer(typeof(CdsSimulator.BtmsClient.Models.ClearanceRequest));
+        var serializer = new XmlSerializer(typeof(ClearanceRequest));
         var sb = new StringBuilder();
         await using (var sw = new StringWriter(sb))
         {
@@ -219,7 +211,7 @@ public static class EndpointRouteBuilderExtensions
 
         var xml = sb.ToString();
 
-        var entity = new ClearanceRequest
+        var entity = new DbEntities.ClearanceRequest
         {
             Id = ObjectId.GenerateNewId().ToString(),
             Timestamp = DateTime.UtcNow,

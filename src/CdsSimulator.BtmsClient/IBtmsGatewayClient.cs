@@ -1,4 +1,4 @@
-using CdsSimulator.BtmsClient.Models;
+using BtmsGateway.Contract.CustomsDeclarations;
 
 namespace CdsSimulator.BtmsClient;
 

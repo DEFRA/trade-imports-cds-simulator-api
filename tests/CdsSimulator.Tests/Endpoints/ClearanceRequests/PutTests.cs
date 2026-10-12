@@ -2,8 +2,8 @@ using System.Net;
 using System.Text;
 using System.Xml.Serialization;
 using AwesomeAssertions;
+using BtmsGateway.Contract.CustomsDeclarations;
 using CdsSimulator.BtmsClient;
-using CdsSimulator.BtmsClient.Models;
 using Defra.TradeImportsCdsSimulator.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -45,7 +45,7 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
                 DestinationSystem = "CDS",
                 CorrelationId = null,
             },
-            Header = new Header { EntryReference = "TESTMRN12345678", EntryVersionNumber = 1 },
+            Header = new ClearanceRequestHeader { EntryReference = "TESTMRN12345678", EntryVersionNumber = 1 },
             Items = [new Item { ItemNumber = 1 }],
         };
 
@@ -96,7 +96,7 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
         var request = new ClearanceRequest
         {
             ServiceHeader = new ServiceHeader { SourceSystem = "ALVS", DestinationSystem = "CDS" },
-            Header = new Header { EntryReference = "TESTMRN12345678", EntryVersionNumber = 1 },
+            Header = new ClearanceRequestHeader { EntryReference = "TESTMRN12345678", EntryVersionNumber = 1 },
             Items = [new Item { ItemNumber = 1 }],
         };
 

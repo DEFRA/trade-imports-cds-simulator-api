@@ -4,7 +4,7 @@ namespace Defra.TradeImportsCdsSimulator.Configuration;
 
 public class AclOptions
 {
-    public Dictionary<string, Client> Clients { get; init; } = new();
+    public Dictionary<string, Client> Clients { get; init; } = [];
 
     public class Client
     {
