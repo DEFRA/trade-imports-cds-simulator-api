@@ -1,17 +1,12 @@
+using System.Text;
+using System.Xml.Serialization;
 using BtmsGateway.Contract.CustomsDeclarations;
-
 using CdsSimulator.BtmsClient;
-
 using Defra.TradeImportsCdsSimulator.Data;
 using Defra.TradeImportsCdsSimulator.Exceptions;
 using Defra.TradeImportsCdsSimulator.Utils;
 using Defra.TradeImportsCdsSimulator.Utils.CorrelationId;
-
 using MongoDB.Bson;
-
-using System.Text;
-using System.Xml.Serialization;
-
 using DbEntities = Defra.TradeImportsCdsSimulator.Data.Entities;
 
 namespace Defra.TradeImportsCdsSimulator.Endpoints.Finalisations;
