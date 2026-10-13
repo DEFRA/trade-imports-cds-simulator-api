@@ -35,19 +35,12 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
     [Fact]
     public async Task Put_WhenValidJson_ShouldReturnNoContent()
     {
-        var finalisation = new Finalisation
-        {
-            Header = new FinalisationHeader
+        var json = """
             {
-                EntryReference = "TESTMRN123",
-                EntryVersionNumber = 1,
-                ManualAction = "N",
-                FinalState = "1",
-            },
-            ServiceHeader = new ServiceHeader { DestinationSystem = "BTMS", SourceSystem = "CDS" },
-        };
-
-        var json = JsonSerializer.Serialize(finalisation);
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "header": { "entryReference":"TESTMRN123",  "entryVersionNumber": 1, "manualAction":"N", "finalState":"1" }
+            }
+            """;
 
         var client = CreateClient();
 
@@ -60,5 +53,65 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
         await _mockBtms
             .Received(1)
             .PostFinalisationNotificationAsync(Arg.Any<Finalisation>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Put_WhenEntryReferenceNotSet_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS", "serviceCallTimestamp":"2024-01-01T00:00:00Z" },
+              "header": { "entryVersionNumber":1, "manualAction":"N", "finalState":"1" }
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PutAsync(
+            Testing.Endpoints.FinalisationNotifications.Put,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Put_WhenEntryVersionNumberNotSet_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS", "serviceCallTimestamp":"2024-01-01T00:00:00Z" },
+              "header": { "entryReference":"TESTMRN123",  "manualAction":"N", "finalState":"1" }
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PutAsync(
+            Testing.Endpoints.FinalisationNotifications.Put,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Put_WhenInvalidXml_ShouldReturnBadRequest()
+    {
+        var client = CreateClient();
+
+        var soap = $"""
+            <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:oas="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                 <soap:Header>
+                     <oas:Security soap:role="system" soap:mustUnderstand="true">
+                         <oas:UsernameToken></oas:UsernameToken>
+                     </oas:Security>
+                 </soap:Header>
+                 <soap:Body>junk</soap:Body>
+            </soap:Envelope>
+            """;
+
+        var content = new StringContent(soap, Encoding.UTF8, "application/xml");
+        var response = await client.PutAsync(Testing.Endpoints.FinalisationNotifications.Put, content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 }

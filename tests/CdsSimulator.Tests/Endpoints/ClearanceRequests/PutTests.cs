@@ -190,4 +190,26 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task Put_WhenInvalidClearanceRequest_ShouldReturnBadRequest()
+    {
+        var client = CreateClient();
+
+        var soap = $"""
+            <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:oas="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                 <soap:Header>
+                     <oas:Security soap:role="system" soap:mustUnderstand="true">
+                         <oas:UsernameToken></oas:UsernameToken>
+                     </oas:Security>
+                 </soap:Header>
+                 <soap:Body><xml /></soap:Body>
+            </soap:Envelope>
+            """;
+
+        var content = new StringContent(soap, Encoding.UTF8, "application/xml");
+        var response = await client.PutAsync(Testing.Endpoints.ClearanceRequests.Put, content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }

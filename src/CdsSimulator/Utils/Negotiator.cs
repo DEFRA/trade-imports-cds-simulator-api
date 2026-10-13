@@ -3,6 +3,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using Defra.TradeImportsCdsSimulator.Exceptions;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 
@@ -33,7 +34,7 @@ namespace Defra.TradeImportsCdsSimulator.Utils
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException("Request body is not valid XML.", ex);
+                    throw new InvalidRequestException("Request body is not valid XML.", ex);
                 }
 
                 var rootAttr = typeof(T).GetCustomAttribute<XmlRootAttribute>();
@@ -48,7 +49,7 @@ namespace Defra.TradeImportsCdsSimulator.Utils
 
                 if (payload is null)
                 {
-                    throw new InvalidOperationException(
+                    throw new InvalidRequestException(
                         $"SOAP body does not contain expected '{expectedLocal}' element."
                     );
                 }
@@ -78,7 +79,7 @@ namespace Defra.TradeImportsCdsSimulator.Utils
 
                 using var reader = XmlReader.Create(new StringReader(xml), settings);
                 if (serializer.Deserialize(reader) is not T request)
-                    throw new InvalidOperationException($"Unable to deserialize XML to {typeof(T).FullName}");
+                    throw new InvalidRequestException($"Unable to deserialize XML to {typeof(T).FullName}");
 
                 return request;
             }
@@ -89,7 +90,7 @@ namespace Defra.TradeImportsCdsSimulator.Utils
                 .Value.SerializerOptions;
 
             var result = await httpRequest.ReadFromJsonAsync<T>(jsonOptions, cancellationToken);
-            return result ?? throw new InvalidOperationException($"Unable to deserialize JSON to {typeof(T).FullName}");
+            return result ?? throw new InvalidRequestException($"Unable to deserialize JSON to {typeof(T).FullName}");
         }
     }
 }

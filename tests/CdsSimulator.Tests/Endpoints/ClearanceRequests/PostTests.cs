@@ -265,4 +265,48 @@ public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper
             .Received(1)
             .PostClearanceRequestAsync(Arg.Any<ClearanceRequest>(), Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task Post_WhenInvalidClearanceRequest_ShouldReturnBadRequest()
+    {
+        var client = CreateClient();
+
+        var soap = $"""
+            <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:oas="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                 <soap:Header>
+                     <oas:Security soap:role="system" soap:mustUnderstand="true">
+                         <oas:UsernameToken></oas:UsernameToken>
+                     </oas:Security>
+                 </soap:Header>
+                 <soap:Body><xml /></soap:Body>
+            </soap:Envelope>
+            """;
+
+        var content = new StringContent(soap, Encoding.UTF8, "application/xml");
+        var response = await client.PostAsync(Testing.Endpoints.ClearanceRequests.Post, content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Post_WhenInvalidXml_ShouldReturnBadRequest()
+    {
+        var client = CreateClient();
+
+        var soap = $"""
+            <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:oas="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                 <soap:Header>
+                     <oas:Security soap:role="system" soap:mustUnderstand="true">
+                         <oas:UsernameToken></oas:UsernameToken>
+                     </oas:Security>
+                 </soap:Header>
+                 <soap:Body>junk</soap:Body>
+            </soap:Envelope>
+            """;
+
+        var content = new StringContent(soap, Encoding.UTF8, "application/xml");
+        var response = await client.PostAsync(Testing.Endpoints.ClearanceRequests.Post, content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }

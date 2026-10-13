@@ -7,7 +7,7 @@ using Xunit;
 
 namespace CdsSimulator.BtmsClient.Tests;
 
-public class BtmsGatewayClientTests
+public class ClearanceRequestTests
 {
     [Fact]
     public async Task PostClearanceRequestAsync_IncludesSoapEnvelopeAndEscapedHeader()

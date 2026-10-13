@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text;
-using System.Text.Json;
 using AwesomeAssertions;
 using BtmsGateway.Contract.CustomsDeclarations;
 using CdsSimulator.BtmsClient;
@@ -35,21 +34,71 @@ public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper
     }
 
     [Fact]
+    public async Task Post_WhenCorrelationIdAlreadySet_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS", "correlationId": "123" },
+              "header": { "entryReference": "TESTMRN123",  "entryVersionNumber": 1, "manualAction": "N", "finalState": "1" }
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PostAsync(
+            Testing.Endpoints.FinalisationNotifications.Post,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Post_WhenServiceCallTimestampAlreadySet_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS", "serviceCallTimestamp":"2024-01-01T00:00:00Z" },
+              "header": { "entryReference":"TESTMRN123",  "entryVersionNumber": 1, "manualAction":"N", "finalState":"1" }
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PostAsync(
+            Testing.Endpoints.FinalisationNotifications.Post,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Post_WhenEntryVersionNumberNotSet_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS", "serviceCallTimestamp":"2024-01-01T00:00:00Z" },
+              "header": { "entryReference":"TESTMRN123",  "manualAction":"N", "finalState":"1" }
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PostAsync(
+            Testing.Endpoints.FinalisationNotifications.Post,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Post_WhenValidJson_ShouldReturnCreated()
     {
-        var finalisation = new Finalisation
-        {
-            Header = new FinalisationHeader
+        var json = """
             {
-                EntryReference = "TESTMRN123",
-                EntryVersionNumber = 1,
-                ManualAction = "N",
-                FinalState = "1",
-            },
-            ServiceHeader = new ServiceHeader { DestinationSystem = "BTMS", SourceSystem = "CDS" },
-        };
-
-        var json = JsonSerializer.Serialize(finalisation);
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "header": { "entryReference":"TESTMRN123",  "entryVersionNumber": 1, "manualAction":"N", "finalState":"1" }
+            }
+            """;
 
         var client = CreateClient();
 
@@ -69,33 +118,23 @@ public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper
     [Fact]
     public async Task Post_WhenDuplicateMrnAndVersion_ShouldReturnConflict()
     {
-        const string duplicateMrn = "DuplicateMrn";
-        const int duplicateVersion = 1;
-
         ((MemoryCollectionSet<FinalisationDataSet>)_memDb.FinalisationNotifications).Insert(
             new Data.Entities.Finalisation
             {
                 Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
                 Timestamp = DateTime.UtcNow,
-                Mrn = duplicateMrn,
-                EntryVersionNumber = duplicateVersion,
+                Mrn = "DuplicateMrn",
+                EntryVersionNumber = 1,
                 Xml = "<xml/>",
             }
         );
 
-        var finalisation = new Finalisation
-        {
-            Header = new FinalisationHeader
+        var json = """
             {
-                EntryReference = duplicateMrn,
-                EntryVersionNumber = duplicateVersion,
-                ManualAction = "N",
-                FinalState = "1",
-            },
-            ServiceHeader = new ServiceHeader { DestinationSystem = "BTMS", SourceSystem = "CDS" },
-        };
-
-        var json = JsonSerializer.Serialize(finalisation);
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "header": { "entryReference":"DuplicateMrn",  "entryVersionNumber": 1, "manualAction":"N", "finalState":"1" }
+            }
+            """;
 
         var client = CreateClient();
 
@@ -105,5 +144,27 @@ public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Post_WhenInvalidXml_ShouldReturnBadRequest()
+    {
+        var client = CreateClient();
+
+        var soap = $"""
+            <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:oas="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                 <soap:Header>
+                     <oas:Security soap:role="system" soap:mustUnderstand="true">
+                         <oas:UsernameToken></oas:UsernameToken>
+                     </oas:Security>
+                 </soap:Header>
+                 <soap:Body>junk</soap:Body>
+            </soap:Envelope>
+            """;
+
+        var content = new StringContent(soap, Encoding.UTF8, "application/xml");
+        var response = await client.PostAsync(Testing.Endpoints.FinalisationNotifications.Put, content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 }

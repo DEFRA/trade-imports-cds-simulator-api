@@ -3,6 +3,7 @@ using System.Xml.Serialization;
 using BtmsGateway.Contract.CustomsDeclarations;
 using CdsSimulator.BtmsClient;
 using Defra.TradeImportsCdsSimulator.Data;
+using Defra.TradeImportsCdsSimulator.Exceptions;
 using Defra.TradeImportsCdsSimulator.Utils;
 using Defra.TradeImportsCdsSimulator.Utils.CorrelationId;
 using MongoDB.Bson;
@@ -31,7 +32,15 @@ public static class EndpointRouteBuilderExtensions
         CancellationToken cancellationToken
     )
     {
-        var request = await Negotiator.NegotiateRequest<Finalisation>(httpRequest, cancellationToken);
+        Finalisation request;
+        try
+        {
+            request = await Negotiator.NegotiateRequest<Finalisation>(httpRequest, cancellationToken);
+        }
+        catch (InvalidRequestException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
 
         // CorrelationId must NOT be set by caller
         if (request.ServiceHeader.CorrelationId != null)
@@ -83,7 +92,15 @@ public static class EndpointRouteBuilderExtensions
         CancellationToken cancellationToken
     )
     {
-        var request = await Negotiator.NegotiateRequest<Finalisation>(httpRequest, cancellationToken);
+        Finalisation request;
+        try
+        {
+            request = await Negotiator.NegotiateRequest<Finalisation>(httpRequest, cancellationToken);
+        }
+        catch (InvalidRequestException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
 
         // PUT (test) has different validation requirements
         request.ServiceHeader.CorrelationId ??= CorrelationIdGenerator.Generate();
