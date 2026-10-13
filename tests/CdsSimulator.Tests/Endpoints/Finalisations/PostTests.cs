@@ -186,4 +186,25 @@ public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task Post_WhenXmlContainsDoctype_ShouldReturnBadRequest()
+    {
+        var client = CreateClient();
+
+        var soap = """
+            <!DOCTYPE root [
+              <!ENTITY ext SYSTEM "file:///etc/passwd">
+            ]>
+            <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+              <soap:Header/>
+              <soap:Body>&ext;</soap:Body>
+            </soap:Envelope>
+            """;
+
+        var content = new StringContent(soap, Encoding.UTF8, "application/xml");
+        var response = await client.PostAsync(Testing.Endpoints.FinalisationNotifications.Post, content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }

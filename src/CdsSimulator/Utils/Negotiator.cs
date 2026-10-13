@@ -30,7 +30,14 @@ namespace Defra.TradeImportsCdsSimulator.Utils
                 XDocument doc;
                 try
                 {
-                    doc = XDocument.Parse(body);
+                    var xmlReaderSettings = new XmlReaderSettings
+                    {
+                        DtdProcessing = DtdProcessing.Prohibit,
+                        XmlResolver = null,
+                    };
+                    using var stringReader = new StringReader(body);
+                    using var xmlReader = XmlReader.Create(stringReader, xmlReaderSettings);
+                    doc = XDocument.Load(xmlReader);
                 }
                 catch (Exception ex)
                 {

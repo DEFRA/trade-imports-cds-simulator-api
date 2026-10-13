@@ -6,7 +6,7 @@ namespace Defra.TradeImportsCdsSimulator.IntegrationTests.Endpoints.Finalisation
 
 public class PostTests : TestBase.TestBase
 {
-    private const string FinalisationXml = """
+    private readonly string _finalisationXml = $"""
         <?xml version="1.0" encoding="UTF-8"?>
         <Finalisation xmlns="http://notifyfinalisedstatehmrcfacade.types.esb.ws.cara.defra.com">
           <ServiceHeader>
@@ -14,7 +14,7 @@ public class PostTests : TestBase.TestBase
             <DestinationSystem>CDS</DestinationSystem>
           </ServiceHeader>
           <Header>
-            <EntryReference>INTMRN123</EntryReference>
+            <EntryReference>{Utils.Mrn.MrnGenerator.GenerateMrn()}</EntryReference>
             <EntryVersionNumber>1</EntryVersionNumber>
             <FinalState>1</FinalState>
             <DecisionNumber>1</DecisionNumber>
@@ -29,8 +29,8 @@ public class PostTests : TestBase.TestBase
         var client = CreateHttpClient();
 
         var response = await client.PostAsync(
-            Testing.Endpoints.FinalisationNotifications.Post,
-            new StringContent(FinalisationXml, Encoding.UTF8, "application/xml")
+            Testing.Endpoints.FinalisationNotifications.Put,
+            new StringContent(_finalisationXml, Encoding.UTF8, "application/xml")
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);

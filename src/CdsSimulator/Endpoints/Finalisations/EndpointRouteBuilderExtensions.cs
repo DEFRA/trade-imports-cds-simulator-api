@@ -78,11 +78,11 @@ public static class EndpointRouteBuilderExtensions
             );
         }
 
-        var clearanceRequest = await SaveFinalisation(request, dbContext, cancellationToken);
+        var finalisation = await SaveFinalisation(request, dbContext, cancellationToken);
 
         await btmsClient.PostFinalisationNotificationAsync(request, cancellationToken);
 
-        return Results.Created($"/clearanceRequest/{clearanceRequest.Id}", clearanceRequest);
+        return Results.Created($"/finalisationNotification/{finalisation.Id}", finalisation);
     }
 
     public static async Task<IResult> PutFinalisationRequest(
