@@ -76,8 +76,27 @@ public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper
     {
         var json = """
             {
-              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS", "serviceCallTimestamp":"2024-01-01T00:00:00Z" },
-              "header": { "entryReference":"TESTMRN123",  "manualAction":"N", "finalState":"1" }
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "header": { "entryReference":"TESTMRN123", "manualAction":"N", "finalState":"1" }
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PostAsync(
+            Testing.Endpoints.FinalisationNotifications.Post,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Post_WhenEntryReferenceNotSet_ShouldReturnBadRequest()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "ALVS", "destinationSystem": "CDS" },
+              "header": { "entryVersionNumber":1, "manualAction": "N", "finalState": "1" }
             }
             """;
 
@@ -163,7 +182,7 @@ public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper
             """;
 
         var content = new StringContent(soap, Encoding.UTF8, "application/xml");
-        var response = await client.PostAsync(Testing.Endpoints.FinalisationNotifications.Put, content);
+        var response = await client.PostAsync(Testing.Endpoints.FinalisationNotifications.Post, content);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
