@@ -8,7 +8,7 @@ public class PostTests : TestBase.TestBase
 {
     private const string FinalisationXml = """
         <?xml version="1.0" encoding="UTF-8"?>
-        <Finalisation>
+        <Finalisation xmlns="http://notifyfinalisedstatehmrcfacade.types.esb.ws.cara.defra.com">
           <ServiceHeader>
             <SourceSystem>ALVS</SourceSystem>
             <DestinationSystem>CDS</DestinationSystem>
@@ -16,6 +16,9 @@ public class PostTests : TestBase.TestBase
           <Header>
             <EntryReference>INTMRN123</EntryReference>
             <EntryVersionNumber>1</EntryVersionNumber>
+            <FinalState>1</FinalState>
+            <DecisionNumber>1</DecisionNumber>
+            <ManualAction>N</ManualAction>
           </Header>
         </Finalisation>
         """;
