@@ -31,6 +31,24 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         return response;
     }
 
+    public async Task<HttpResponseMessage> PostFinalisationNotificationAsync(
+        Finalisation finalisation,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var routePath = GetRoutePath(btmsClientOptions.Routes, "FinalisationNotificationRequest");
+        var target = CombineUrl(btmsClientOptions.GatewayBaseUrl, routePath);
+
+        var soap = BuildSoapEnvelope(finalisation, btmsClientOptions.UsernameToken, btmsClientOptions.Password);
+
+        using var content = new StringContent(soap, Encoding.UTF8, "application/soap+xml");
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml") { CharSet = "utf-8" };
+
+        var response = await _httpClient.PostAsync(target, content, cancellationToken).ConfigureAwait(false);
+
+        return response;
+    }
+
     private static string CombineUrl(string baseUrl, string path)
     {
         if (string.IsNullOrWhiteSpace(baseUrl))
@@ -60,7 +78,8 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         throw new KeyNotFoundException($"Route '{routeName}' was not configured under BtmsClient:Routes.");
     }
 
-    private static string BuildSoapEnvelope(ClearanceRequest request, string? usernameToken, string? password)
+    private static string BuildSoapEnvelope<T>(T request, string? usernameToken, string? password)
+        where T : class
     {
         var bodyXml = SerializeObjectToXml(request);
 

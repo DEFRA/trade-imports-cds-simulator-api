@@ -59,7 +59,10 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
         }
 
         var content = new StringContent(sb.ToString(), Encoding.UTF8, "application/xml");
-        var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/clearanceRequest") { Content = content };
+        var httpRequest = new HttpRequestMessage(HttpMethod.Put, Testing.Endpoints.ClearanceRequests.Put)
+        {
+            Content = content,
+        };
         var response = await client.SendAsync(httpRequest);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -84,7 +87,10 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
         }";
 
         var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/clearanceRequest") { Content = content };
+        var httpRequest = new HttpRequestMessage(HttpMethod.Put, Testing.Endpoints.ClearanceRequests.Put)
+        {
+            Content = content,
+        };
         var response = await client.SendAsync(httpRequest);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -128,7 +134,10 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
             """;
 
         var content = new StringContent(soap, Encoding.UTF8, "application/xml");
-        var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/clearanceRequest") { Content = content };
+        var httpRequest = new HttpRequestMessage(HttpMethod.Put, Testing.Endpoints.ClearanceRequests.Put)
+        {
+            Content = content,
+        };
         var response = await client.SendAsync(httpRequest);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -152,7 +161,7 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
             """;
 
         var client = CreateClient();
-        var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/clearanceRequest")
+        var httpRequest = new HttpRequestMessage(HttpMethod.Put, Testing.Endpoints.ClearanceRequests.Put)
         {
             Content = new StringContent(json, Encoding.UTF8, "application/json"),
         };
@@ -173,7 +182,7 @@ public class PutTests(SimulatorWebApplicationFactory factory, ITestOutputHelper 
             """;
 
         var client = CreateClient();
-        var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/clearanceRequest")
+        var httpRequest = new HttpRequestMessage(HttpMethod.Put, Testing.Endpoints.ClearanceRequests.Put)
         {
             Content = new StringContent(json, Encoding.UTF8, "application/json"),
         };

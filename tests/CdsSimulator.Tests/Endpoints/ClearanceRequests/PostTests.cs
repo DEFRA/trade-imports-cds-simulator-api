@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 
 namespace Defra.TradeImportsCdsSimulator.Tests.Endpoints.ClearanceRequests;
 
-public class ClearanceRequestTests(SimulatorWebApplicationFactory factory, ITestOutputHelper outputHelper)
+public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper outputHelper)
     : EndpointTestBase(factory, outputHelper)
 {
     private readonly Utils.InMemoryData.MemoryDbContext _memDb = new();

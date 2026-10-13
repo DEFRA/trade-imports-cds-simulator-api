@@ -8,4 +8,9 @@ public interface IBtmsGatewayClient
         ClearanceRequest request,
         CancellationToken cancellationToken = default
     );
+
+    Task<HttpResponseMessage> PostFinalisationNotificationAsync(
+        Finalisation finalisation,
+        CancellationToken cancellationToken = default
+    );
 }
