@@ -10,6 +10,7 @@ namespace CdsSimulator.BtmsClient;
 public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClientOptions) : IBtmsGatewayClient
 {
     public const string DefaultRoutePath = "/ITSW/CDS/SubmitImportDocumentCDSFacadeService";
+    private const string SoapMediaType = "application/soap+xml";
 
     private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
@@ -23,15 +24,10 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         var routePath = GetRoutePath(btmsClientOptions.Routes, "AlvsClearanceRequest");
         var target = CombineUrl(btmsClientOptions.GatewayBaseUrl, routePath);
 
-        var soap = BuildSoapEnvelope(
-            request,
-            clearanceRequestNamespace,
-            btmsClientOptions.UsernameToken,
-            btmsClientOptions.Password
-        );
+        var soap = BuildSoapEnvelope(request, clearanceRequestNamespace, btmsClientOptions.UsernameToken, btmsClientOptions.Password);
 
-        using var content = new StringContent(soap, Encoding.UTF8, "application/soap+xml");
-        content.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml") { CharSet = "utf-8" };
+        using var content = new StringContent(soap, Encoding.UTF8, SoapMediaType);
+        content.Headers.ContentType = new MediaTypeHeaderValue(SoapMediaType) { CharSet = "utf-8" };
 
         var response = await _httpClient.PostAsync(target, content, cancellationToken).ConfigureAwait(false);
 
@@ -49,15 +45,10 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         var routePath = GetRoutePath(btmsClientOptions.Routes, "FinalisationNotificationRequest");
         var target = CombineUrl(btmsClientOptions.GatewayBaseUrl, routePath);
 
-        var soap = BuildSoapEnvelope(
-            finalisation,
-            finalisationNotificationNamespace,
-            btmsClientOptions.UsernameToken,
-            btmsClientOptions.Password
-        );
+        var soap = BuildSoapEnvelope(finalisation, finalisationNotificationNamespace, btmsClientOptions.UsernameToken, btmsClientOptions.Password);
 
-        using var content = new StringContent(soap, Encoding.UTF8, "application/soap+xml");
-        content.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml") { CharSet = "utf-8" };
+        using var content = new StringContent(soap, Encoding.UTF8, SoapMediaType);
+        content.Headers.ContentType = new MediaTypeHeaderValue(SoapMediaType) { CharSet = "utf-8" };
 
         var response = await _httpClient.PostAsync(target, content, cancellationToken).ConfigureAwait(false);
 
@@ -89,8 +80,7 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         throw new KeyNotFoundException($"Route '{routeName}' was not configured under BtmsClient:Routes.");
     }
 
-    private static string BuildSoapEnvelope<T>(T request, string bodyNamespace, string? usernameToken, string? password)
-        where T : class
+    private static string BuildSoapEnvelope<T>(T request, string bodyNamespace, string? usernameToken, string? password) where T : class
     {
         var bodyXml = SerializeObjectToXml(request, bodyNamespace);
 
