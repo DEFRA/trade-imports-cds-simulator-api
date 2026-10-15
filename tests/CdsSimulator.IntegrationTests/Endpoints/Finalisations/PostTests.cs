@@ -8,7 +8,7 @@ public class PostTests : TestBase.TestBase
 {
     private readonly string _finalisationXml = $"""
         <?xml version="1.0" encoding="UTF-8"?>
-        <Finalisation xmlns="http://notifyfinalisedstatehmrcfacade.types.esb.ws.cara.defra.com">
+        <FinalisationNotificationRequest xmlns="http://notifyfinalisedstatehmrcfacade.types.esb.ws.cara.defra.com">
           <ServiceHeader>
             <SourceSystem>ALVS</SourceSystem>
             <DestinationSystem>CDS</DestinationSystem>
@@ -20,7 +20,7 @@ public class PostTests : TestBase.TestBase
             <DecisionNumber>1</DecisionNumber>
             <ManualAction>N</ManualAction>
           </Header>
-        </Finalisation>
+        </FinalisationNotificationRequest>
         """;
 
     [Fact]
