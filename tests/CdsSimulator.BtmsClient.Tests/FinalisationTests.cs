@@ -88,7 +88,7 @@ public class FinalisationTests
         XNamespace soapNs = "http://www.w3.org/2003/05/soap-envelope";
         XNamespace reqNs = "http://notifyfinalisedstatehmrcfacade.types.esb.ws.cara.defra.com";
 
-        var payload = soap.Root?.Element(soapNs + "Body")?.Element(reqNs + "Finalisation");
+        var payload = soap.Root?.Element(soapNs + "Body")?.Element(reqNs + "FinalisationNotificationRequest");
         payload.Should().NotBeNull();
 
         payload.Element(reqNs + "ServiceHeader")!.Element(reqNs + "SourceSystem")!.Value.Should().Be("CHIEF");
