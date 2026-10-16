@@ -68,7 +68,6 @@ All three content types are accepted:
 
 Submits a new clearance request. The simulator assigns a `CorrelationId` and `ServiceCallTimestamp` automatically.
 
-- **Authentication:** Basic Auth with `write` scope
 - **Content-Type:** XML, SOAP, or JSON
 - **Validation rules:**
   - `ServiceHeader.CorrelationId` **must not** be set by the caller — the simulator generates it.
@@ -131,7 +130,6 @@ All three content types are accepted:
 
 Submits a new finalisation notification request. The simulator assigns a `CorrelationId` and `ServiceCallTimestamp` automatically.
 
-- **Authentication:** Basic Auth with `write` scope
 - **Content-Type:** XML, SOAP, or JSON
 - **Validation rules:**
   - `ServiceHeader.CorrelationId` **must not** be set by the caller — the simulator generates it.
