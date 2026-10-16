@@ -67,7 +67,7 @@ All three content types are accepted:
 #### `POST ws/CDS/defra/alvsclearancerequestinbound/v1`
 
 Submits a new clearance request. The simulator assigns a `CorrelationId` and `ServiceCallTimestamp` automatically.
-
+- **Authentication:** None
 - **Content-Type:** XML, SOAP, or JSON
 - **Validation rules:**
   - `ServiceHeader.CorrelationId` **must not** be set by the caller — the simulator generates it.
@@ -83,7 +83,7 @@ Submits a new clearance request. The simulator assigns a `CorrelationId` and `Se
 #### `PUT clearanceRequest`
 
 Updates an existing clearance request (used for test injection). Unlike the POST endpoint, the caller must supply a complete `ServiceHeader`.
-
+- **Authentication:** None
 - **Content-Type:** XML, SOAP, or JSON
 - **Validation rules:**
   - `ServiceHeader` **must** be present.
@@ -129,7 +129,7 @@ All three content types are accepted:
 #### `POST ws/CDS/defra/alvsfinalisationrequestinbound/v1`
 
 Submits a new finalisation notification request. The simulator assigns a `CorrelationId` and `ServiceCallTimestamp` automatically.
-
+- **Authentication:** None
 - **Content-Type:** XML, SOAP, or JSON
 - **Validation rules:**
   - `ServiceHeader.CorrelationId` **must not** be set by the caller — the simulator generates it.
@@ -146,7 +146,7 @@ Submits a new finalisation notification request. The simulator assigns a `Correl
 
 Updates a finalisation notification request (used for test injection).
 
-- **Authentication:** Basic Auth with `write` scope
+- **Authentication:** None
 - **Content-Type:** XML, SOAP, or JSON
 - **Validation rules:**
   - `Header.EntryReference` **must** be set.
