@@ -9,7 +9,14 @@ public static class Endpoints
     {
         public static string Post => "ws/CDS/defra/alvsclearancerequestinbound/v1";
 
-        public static string Put => "clearanceRequest";
+        public static string Put => "ws/CDS/defra/alvsclearancerequestinbound/v1";
+    }
+
+    public static class FinalisationNotifications
+    {
+        public static string Post => "ws/CDS/defra/alvsfinalisationrequestinbound/v1";
+
+        public static string Put => "ws/CDS/defra/alvsfinalisationrequestinbound/v1";
     }
 
     public static class DecisionNotifications

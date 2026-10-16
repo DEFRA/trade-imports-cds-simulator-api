@@ -1,10 +1,10 @@
 using CdsSimulator.BtmsClient;
 using Defra.TradeImportsCdsSimulator.Authentication;
-using Defra.TradeImportsCdsSimulator.Data.Entities;
 using Defra.TradeImportsCdsSimulator.Data.Extensions;
 using Defra.TradeImportsCdsSimulator.Endpoints;
 using Defra.TradeImportsCdsSimulator.Endpoints.ClearanceRequests;
 using Defra.TradeImportsCdsSimulator.Endpoints.Decisions;
+using Defra.TradeImportsCdsSimulator.Endpoints.Finalisations;
 using Defra.TradeImportsCdsSimulator.Endpoints.OutboundErrors;
 using Defra.TradeImportsCdsSimulator.Extensions;
 using Defra.TradeImportsCdsSimulator.Health;
@@ -12,7 +12,6 @@ using Defra.TradeImportsCdsSimulator.Metrics;
 using Defra.TradeImportsCdsSimulator.Utils;
 using Defra.TradeImportsCdsSimulator.Utils.Http;
 using Defra.TradeImportsCdsSimulator.Utils.Logging;
-using Elastic.CommonSchema;
 using Elastic.CommonSchema.Serilog;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
@@ -91,6 +90,7 @@ static WebApplication BuildWebApplication(WebApplicationBuilder builder)
 
     app.MapClearanceRequestEndpoints();
     app.MapDecisionEndpoints();
+    app.MapFinalisationEndpoints();
     app.MapErrorEndpoints();
     app.UseExceptionHandler(
         new ExceptionHandlerOptions

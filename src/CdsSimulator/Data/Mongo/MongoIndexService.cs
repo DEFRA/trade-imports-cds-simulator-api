@@ -25,8 +25,17 @@ public class MongoIndexService(IMongoDatabase database, ILogger<MongoIndexServic
 
         await CreateIndex(
             "ClearanceRequestIdx",
-            Builders<ClearanceRequest>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.Timestamp),
+            Builders<ClearanceRequest>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.EntryVersionNumber),
+            unique: true,
             collectionName: nameof(IDbContext.ClearanceRequests),
+            cancellationToken: cancellationToken
+        );
+
+        await CreateIndex(
+            "FinalisationNotificationIdx",
+            Builders<Finalisation>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.EntryVersionNumber),
+            unique: true,
+            collectionName: nameof(IDbContext.FinalisationNotifications),
             cancellationToken: cancellationToken
         );
     }
