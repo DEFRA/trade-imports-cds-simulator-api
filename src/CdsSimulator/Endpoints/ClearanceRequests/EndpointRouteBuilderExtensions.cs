@@ -1,17 +1,14 @@
-using System.Reflection;
 using System.Text;
-using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Serialization;
+using BtmsGateway.Contract.CustomsDeclarations;
 using CdsSimulator.BtmsClient;
-using CdsSimulator.BtmsClient.Models;
 using Defra.TradeImportsCdsSimulator.Data;
+using Defra.TradeImportsCdsSimulator.Exceptions;
+using Defra.TradeImportsCdsSimulator.Utils;
 using Defra.TradeImportsCdsSimulator.Utils.CorrelationId;
 using Defra.TradeImportsCdsSimulator.Utils.Mrn;
-using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.Options;
 using MongoDB.Bson;
-using ClearanceRequest = Defra.TradeImportsCdsSimulator.Data.Entities.ClearanceRequest;
+using DbEntities = Defra.TradeImportsCdsSimulator.Data.Entities;
 
 namespace Defra.TradeImportsCdsSimulator.Endpoints.ClearanceRequests;
 
@@ -20,9 +17,12 @@ public static class EndpointRouteBuilderExtensions
     public static void MapClearanceRequestEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("ws/CDS/defra/alvsclearancerequestinbound/v1", PostClearanceRequest)
-            .Produces(StatusCodes.Status201Created);
+            .Produces(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status409Conflict);
 
-        app.MapPut("clearanceRequest", PutClearanceRequest).Produces(StatusCodes.Status204NoContent);
+        app.MapPut("ws/CDS/defra/alvsclearancerequestinbound/v1", PutClearanceRequest)
+            .Produces(StatusCodes.Status204NoContent);
     }
 
     public static async Task<IResult> PostClearanceRequest(
@@ -32,10 +32,15 @@ public static class EndpointRouteBuilderExtensions
         CancellationToken cancellationToken
     )
     {
-        var request = await NegotiateRequest<CdsSimulator.BtmsClient.Models.ClearanceRequest>(
-            httpRequest,
-            cancellationToken
-        );
+        ClearanceRequest request;
+        try
+        {
+            request = await Negotiator.NegotiateRequest<ClearanceRequest>(httpRequest, cancellationToken);
+        }
+        catch (InvalidRequestException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
 
         // CorrelationId must NOT be set by caller
         if (request.ServiceHeader.CorrelationId != null)
@@ -52,8 +57,6 @@ public static class EndpointRouteBuilderExtensions
         }
 
         request.ServiceHeader.ServiceCallTimestamp = DateTime.UtcNow;
-
-        request.Header ??= new Header();
 
         if (string.IsNullOrWhiteSpace(request.Header.EntryReference))
         {
@@ -97,15 +100,14 @@ public static class EndpointRouteBuilderExtensions
         CancellationToken cancellationToken
     )
     {
-        var request = await NegotiateRequest<CdsSimulator.BtmsClient.Models.ClearanceRequest>(
-            httpRequest,
-            cancellationToken
-        );
-
-        // PUT (test) has different validation requirements
-        if (request.ServiceHeader == null)
+        ClearanceRequest request;
+        try
         {
-            return Results.BadRequest("ServiceHeader must not be null");
+            request = await Negotiator.NegotiateRequest<ClearanceRequest>(httpRequest, cancellationToken);
+        }
+        catch (InvalidRequestException ex)
+        {
+            return Results.BadRequest(ex.Message);
         }
 
         request.ServiceHeader.CorrelationId ??= CorrelationIdGenerator.Generate();
@@ -128,89 +130,13 @@ public static class EndpointRouteBuilderExtensions
         return Results.NoContent();
     }
 
-    private static async Task<T> NegotiateRequest<T>(HttpRequest httpRequest, CancellationToken cancellationToken)
-        where T : class
-    {
-        var contentType = httpRequest.ContentType?.Split(';')[0].Trim().ToLowerInvariant() ?? string.Empty;
-
-        if (contentType.Contains("xml"))
-        {
-            // Read the request body as a string with BOM detection
-            using var sr = new StreamReader(httpRequest.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-            var body = await sr.ReadToEndAsync(cancellationToken);
-
-            // Parse XML and extract the expected element (e.g., ALVSClearanceRequest inside a SOAP body)
-            XDocument doc;
-            try
-            {
-                doc = XDocument.Parse(body);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("Request body is not valid XML.", ex);
-            }
-
-            var rootAttr = typeof(T).GetCustomAttribute<XmlRootAttribute>();
-            var expectedLocal = rootAttr?.ElementName ?? typeof(T).Name;
-            var expectedNs = rootAttr?.Namespace ?? string.Empty;
-
-            var payload = doc.Descendants()
-                .FirstOrDefault(e =>
-                    e.Name.LocalName == expectedLocal
-                    && (string.IsNullOrEmpty(expectedNs) || e.Name.NamespaceName == expectedNs)
-                );
-
-            if (payload is null)
-            {
-                throw new InvalidOperationException($"SOAP body does not contain expected '{expectedLocal}' element.");
-            }
-
-            // Mark empty leaf elements as xsi:nil="true" so XmlSerializer treats them as null
-            var xsi = XNamespace.Get("http://www.w3.org/2001/XMLSchema-instance");
-            // ensure xsi prefix is declared on the payload
-            if (payload.GetNamespaceOfPrefix("xsi") == null)
-            {
-                payload.SetAttributeValue(XNamespace.Xmlns + "xsi", xsi.NamespaceName);
-            }
-
-            var emptyLeaves = payload
-                .DescendantsAndSelf()
-                .Where(e => !e.HasElements && string.IsNullOrWhiteSpace(e.Value))
-                .ToList();
-            foreach (var el in emptyLeaves)
-            {
-                el.SetAttributeValue(xsi + "nil", "true");
-                el.RemoveNodes(); // remove empty text content
-            }
-
-            var xml = payload.ToString(SaveOptions.DisableFormatting);
-
-            var serializer = new XmlSerializer(typeof(T));
-            var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null };
-
-            using var reader = XmlReader.Create(new StringReader(xml), settings);
-            if (serializer.Deserialize(reader) is not T request)
-                throw new InvalidOperationException($"Unable to deserialize XML to {typeof(T).FullName}");
-
-            return request;
-        }
-
-        // support JSON of the raw object
-        var jsonOptions = httpRequest
-            .HttpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>()
-            .Value.SerializerOptions;
-
-        var result = await httpRequest.ReadFromJsonAsync<T>(jsonOptions, cancellationToken);
-        return result ?? throw new InvalidOperationException($"Unable to deserialize JSON to {typeof(T).FullName}");
-    }
-
-    private static async Task<ClearanceRequest> SaveClearanceRequest(
-        CdsSimulator.BtmsClient.Models.ClearanceRequest request,
+    private static async Task<DbEntities.ClearanceRequest> SaveClearanceRequest(
+        ClearanceRequest request,
         IDbContext dbContext,
         CancellationToken cancellationToken
     )
     {
-        var serializer = new XmlSerializer(typeof(CdsSimulator.BtmsClient.Models.ClearanceRequest));
+        var serializer = new XmlSerializer(typeof(ClearanceRequest));
         var sb = new StringBuilder();
         await using (var sw = new StringWriter(sb))
         {
@@ -219,11 +145,11 @@ public static class EndpointRouteBuilderExtensions
 
         var xml = sb.ToString();
 
-        var entity = new ClearanceRequest
+        var entity = new DbEntities.ClearanceRequest
         {
             Id = ObjectId.GenerateNewId().ToString(),
             Timestamp = DateTime.UtcNow,
-            Mrn = request.Header!.EntryReference!,
+            Mrn = request.Header.EntryReference!,
             EntryVersionNumber = (byte)request.Header.EntryVersionNumber!,
             Xml = xml,
         };

@@ -2,12 +2,12 @@ using System.Globalization;
 using System.Net;
 using System.Xml.Linq;
 using AwesomeAssertions;
-using CdsSimulator.BtmsClient.Models;
+using BtmsGateway.Contract.CustomsDeclarations;
 using Xunit;
 
 namespace CdsSimulator.BtmsClient.Tests;
 
-public class BtmsGatewayClientTests
+public class ClearanceRequestTests
 {
     [Fact]
     public async Task PostClearanceRequestAsync_IncludesSoapEnvelopeAndEscapedHeader()
@@ -91,7 +91,7 @@ public class BtmsGatewayClientTests
         var payload = soap.Root?.Element(soapNs + "Body")?.Element(reqNs + "ALVSClearanceRequest");
         payload.Should().NotBeNull();
 
-        payload!
+        payload
             .Element(reqNs + "Header")!
             .Element(reqNs + "EntryReference")!
             .Value.Should()
@@ -130,7 +130,7 @@ public class BtmsGatewayClientTests
     [Fact]
     public async Task PostClearanceRequestAsync_WhenRouteIsMissing_ThrowsKeyNotFoundException()
     {
-        var handler = new CaptureHandler((req, ct) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
+        var handler = new CaptureHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
 
         var client = new BtmsGatewayClient(
             new HttpClient(handler),
@@ -164,7 +164,7 @@ public class BtmsGatewayClientTests
                 CorrelationId = "193264645102865",
                 ServiceCallTimestamp = DateTime.UtcNow,
             },
-            Header = new Header { EntryReference = "290-000151G-02/01/2022", EntryVersionNumber = 1 },
+            Header = new ClearanceRequestHeader { EntryReference = "290-000151G-02/01/2022", EntryVersionNumber = 1 },
             Items = [new Item { ItemNumber = 1 }],
         };
     }
@@ -180,20 +180,20 @@ public class BtmsGatewayClientTests
                 CorrelationId = "193264645102865",
                 ServiceCallTimestamp = new DateTime(2022, 1, 12, 14, 21, 50, 286, DateTimeKind.Utc),
             },
-            Header = new Header
+            Header = new ClearanceRequestHeader
             {
                 EntryReference = "290-000151G-02/01/2022",
                 EntryVersionNumber = 3,
                 PreviousVersionNumber = 2,
-                DeclarationUCR = "1GB116445386000-KDA35932Y1BHX",
+                DeclarationUcr = "1GB116445386000-KDA35932Y1BHX",
                 DeclarationType = "S",
-                ArrivalDateTime = 202201031224,
-                SubmitterTURN = 123456789012,
+                ArrivalDateTime = new DateTime(2022, 1, 12, 14, 21, 50, 286, DateTimeKind.Utc),
+                SubmitterTurn = "123456789012",
                 DeclarantId = "GB123456789013",
                 DeclarantName = "REDACTED",
                 DispatchCountryCode = "CN",
                 GoodsLocationCode = "GBSTN",
-                MasterUCR = "GB/CNS1-SCT16S6LF00000",
+                MasterUcr = "GB/CNS1-SCT16S6LF00000",
             },
             Items =
             [

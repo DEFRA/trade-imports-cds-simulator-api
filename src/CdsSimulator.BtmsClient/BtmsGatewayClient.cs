@@ -3,13 +3,14 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using CdsSimulator.BtmsClient.Models;
+using BtmsGateway.Contract.CustomsDeclarations;
 
 namespace CdsSimulator.BtmsClient;
 
 public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClientOptions) : IBtmsGatewayClient
 {
     public const string DefaultRoutePath = "/ITSW/CDS/SubmitImportDocumentCDSFacadeService";
+    private const string SoapMediaType = "application/soap+xml";
 
     private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
@@ -18,13 +19,46 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         CancellationToken cancellationToken = default
     )
     {
+        const string clearanceRequestNamespace = "http://submitimportdocumenthmrcfacade.types.esb.ws.cara.defra.com";
+
         var routePath = GetRoutePath(btmsClientOptions.Routes, "AlvsClearanceRequest");
         var target = CombineUrl(btmsClientOptions.GatewayBaseUrl, routePath);
 
-        var soap = BuildSoapEnvelope(request, btmsClientOptions.UsernameToken, btmsClientOptions.Password);
+        var soap = BuildSoapEnvelope(
+            request,
+            clearanceRequestNamespace,
+            btmsClientOptions.UsernameToken,
+            btmsClientOptions.Password
+        );
 
-        using var content = new StringContent(soap, Encoding.UTF8, "application/soap+xml");
-        content.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml") { CharSet = "utf-8" };
+        using var content = new StringContent(soap, Encoding.UTF8, SoapMediaType);
+        content.Headers.ContentType = new MediaTypeHeaderValue(SoapMediaType) { CharSet = "utf-8" };
+
+        var response = await _httpClient.PostAsync(target, content, cancellationToken).ConfigureAwait(false);
+
+        return response;
+    }
+
+    public async Task<HttpResponseMessage> PostFinalisationNotificationAsync(
+        Finalisation finalisation,
+        CancellationToken cancellationToken = default
+    )
+    {
+        const string finalisationNotificationNamespace =
+            "http://notifyfinalisedstatehmrcfacade.types.esb.ws.cara.defra.com";
+
+        var routePath = GetRoutePath(btmsClientOptions.Routes, "FinalisationNotificationRequest");
+        var target = CombineUrl(btmsClientOptions.GatewayBaseUrl, routePath);
+
+        var soap = BuildSoapEnvelope(
+            finalisation,
+            finalisationNotificationNamespace,
+            btmsClientOptions.UsernameToken,
+            btmsClientOptions.Password
+        );
+
+        using var content = new StringContent(soap, Encoding.UTF8, SoapMediaType);
+        content.Headers.ContentType = new MediaTypeHeaderValue(SoapMediaType) { CharSet = "utf-8" };
 
         var response = await _httpClient.PostAsync(target, content, cancellationToken).ConfigureAwait(false);
 
@@ -33,10 +67,6 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
 
     private static string CombineUrl(string baseUrl, string path)
     {
-        if (string.IsNullOrWhiteSpace(baseUrl))
-            throw new ArgumentNullException(nameof(baseUrl));
-        if (string.IsNullOrWhiteSpace(path))
-            return baseUrl;
         var baseUri = new Uri(baseUrl, UriKind.Absolute);
         var target = new Uri(baseUri, path);
         return target.ToString();
@@ -60,9 +90,10 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         throw new KeyNotFoundException($"Route '{routeName}' was not configured under BtmsClient:Routes.");
     }
 
-    private static string BuildSoapEnvelope(ClearanceRequest request, string? usernameToken, string? password)
+    private static string BuildSoapEnvelope<T>(T request, string bodyNamespace, string? usernameToken, string? password)
+        where T : class
     {
-        var bodyXml = SerializeObjectToXml(request);
+        var bodyXml = SerializeObjectToXml(request, bodyNamespace);
 
         var bodyElement = XElement.Parse(bodyXml);
 
@@ -104,11 +135,11 @@ public class BtmsGatewayClient(HttpClient httpClient, BtmsClientOptions btmsClie
         return doc.ToString(SaveOptions.DisableFormatting);
     }
 
-    private static string SerializeObjectToXml<T>(T obj)
+    private static string SerializeObjectToXml<T>(T obj, string bodyNamespace)
     {
         var ns = new XmlSerializerNamespaces();
         // Ensure default namespace matches model's XmlRoot Namespace
-        ns.Add(string.Empty, "http://submitimportdocumenthmrcfacade.types.esb.ws.cara.defra.com");
+        ns.Add(string.Empty, bodyNamespace);
 
         var serializer = new XmlSerializer(typeof(T));
         var settings = new XmlWriterSettings

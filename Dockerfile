@@ -25,7 +25,6 @@ RUN dotnet tool restore
 COPY src/CdsSimulator/CdsSimulator.csproj src/CdsSimulator/CdsSimulator.csproj
 COPY src/CdsSimulator.BtmsClient/CdsSimulator.BtmsClient.csproj src/CdsSimulator.BtmsClient/CdsSimulator.BtmsClient.csproj
 COPY tests/Testing/Testing.csproj tests/Testing/Testing.csproj
-COPY tests/TestFixtures/TestFixtures.csproj tests/TestFixtures/TestFixtures.csproj
 COPY tests/CdsSimulator.Tests/CdsSimulator.Tests.csproj tests/CdsSimulator.Tests/CdsSimulator.Tests.csproj
 COPY tests/CdsSimulator.IntegrationTests/CdsSimulator.IntegrationTests.csproj tests/CdsSimulator.IntegrationTests/CdsSimulator.IntegrationTests.csproj
 COPY tests/CdsSimulator.BtmsClient.Tests/CdsSimulator.BtmsClient.Tests.csproj tests/CdsSimulator.BtmsClient.Tests/CdsSimulator.BtmsClient.Tests.csproj
@@ -40,7 +39,6 @@ RUN dotnet restore
 COPY src/CdsSimulator src/CdsSimulator
 COPY src/CdsSimulator.BtmsClient src/CdsSimulator.BtmsClient
 COPY tests/Testing tests/Testing
-COPY tests/TestFixtures tests/TestFixtures
 COPY tests/CdsSimulator.Tests tests/CdsSimulator.Tests
 COPY tests/CdsSimulator.BtmsClient.Tests tests/CdsSimulator.BtmsClient.Tests
 

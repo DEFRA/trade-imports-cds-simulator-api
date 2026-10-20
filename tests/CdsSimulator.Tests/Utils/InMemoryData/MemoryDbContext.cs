@@ -12,6 +12,9 @@ public class MemoryDbContext : IDbContext
     public IMongoCollectionSet<ClearanceRequest> ClearanceRequests { get; } =
         new MemoryCollectionSet<ClearanceRequest>();
 
+    public IMongoCollectionSet<Finalisation> FinalisationNotifications { get; } =
+        new MemoryCollectionSet<Finalisation>();
+
     public Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;

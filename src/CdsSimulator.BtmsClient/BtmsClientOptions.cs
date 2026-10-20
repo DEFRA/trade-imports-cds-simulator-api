@@ -1,5 +1,3 @@
-using System;
-
 namespace CdsSimulator.BtmsClient
 {
     public class BtmsClientOptions
