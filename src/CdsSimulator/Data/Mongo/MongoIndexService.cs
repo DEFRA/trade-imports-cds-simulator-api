@@ -31,6 +31,14 @@ public class MongoIndexService(IMongoDatabase database, ILogger<MongoIndexServic
             cancellationToken: cancellationToken
         );
 
+        // For the list of declarations, newest first.
+        await CreateIndex(
+            "ClearanceRequestTimestampIdx",
+            Builders<ClearanceRequest>.IndexKeys.Ascending(x => x.Mrn).Descending(x => x.Timestamp),
+            collectionName: nameof(IDbContext.ClearanceRequests),
+            cancellationToken: cancellationToken
+        );
+
         await CreateIndex(
             "FinalisationNotificationIdx",
             Builders<Finalisation>.IndexKeys.Ascending(x => x.Mrn).Ascending(x => x.EntryVersionNumber),

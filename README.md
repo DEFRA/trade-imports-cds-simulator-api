@@ -73,6 +73,7 @@ Submits a new clearance request. The simulator assigns a `CorrelationId` and `Se
   - `ServiceHeader.CorrelationId` **must not** be set by the caller — the simulator generates it.
   - `ServiceHeader.ServiceCallTimestamp` **must not** be set by the caller — the simulator generates it.
   - If `Header.EntryReference` is omitted, the simulator auto-generates an MRN and sets `EntryVersionNumber` to `1`.
+  - If `Header.DeclarationUCR` is omitted, the simulator generates one from the declarant's EORI, e.g. `6GB999000000001-K3QZ8T1M`. BTMS refuses a request without one (ALVSVAL313).
   - If `Header.EntryVersionNumber` is provided alongside `Header.PreviousVersionNumber`, the version number must be strictly greater than the previous version number.
   - A request with the same `EntryReference` and `EntryVersionNumber` as an existing record is rejected as a duplicate.
 - **Responses:**
@@ -113,6 +114,50 @@ Updates an existing clearance request (used for test injection). Unlike the POST
 | `mrn`                | `string`   | Movement Reference Number (`Header.EntryReference`) |
 | `entryVersionNumber` | `byte`     | Version number of the entry |
 | `xml`                | `string`   | Serialised XML of the stored `ALVSClearanceRequest` |
+
+### Reading Clearance Requests
+
+For the simulator's UI, under `control/` with the scenarios, away from the CDS interfaces. Both need
+Basic Auth with `read` scope.
+
+#### `GET control/clearance-requests?page=1&pageSize=20`
+
+Declarations, one per MRN, the most recently sent first. `page` is 1 or more and `pageSize` 1 to 100.
+
+```json
+{ "page": 1, "pageSize": 20, "hasMore": true,
+  "items": [ { "mrn": "26GB0P19E7LGB46A2V", "entryVersionNumber": 2, "timestamp": "2026-10-22T10:07:40Z" } ] }
+```
+
+#### `GET control/clearance-requests/{mrn}`
+
+Everything the simulator holds for an MRN, each list in time order: what was sent, as the BTMS gateway
+contract's JSON, and what BTMS sent back, read out of its SOAP. `404 Not Found` if the MRN has no
+clearance request.
+
+```json
+{ "mrn": "26GB0P19E7LGB46A2V",
+  "versions": [ { "entryVersionNumber": 1, "timestamp": "…", "request": { "serviceHeader": {}, "header": {}, "items": [] } } ],
+  "finalisations": [ { "entryVersionNumber": 1, "timestamp": "…", "finalisation": { "serviceHeader": {}, "header": {} } } ],
+  "decisions": [ { "timestamp": "…", "entryVersionNumber": 1, "decisionNumber": 1,
+                   "items": [ { "itemNumber": 1, "checks": [ { "checkCode": "H222", "decisionCode": "X00", "decisionReason": "…" } ] } ] } ],
+  "errors": [ { "timestamp": "…", "entryVersionNumber": 1,
+                "errors": [ { "errorCode": "ALVSVAL313", "errorMessage": "…" } ] } ] }
+```
+
+### Scenarios
+
+Starting points for clearance requests, saved from the simulator's UI. The `model` is kept as given.
+
+#### `GET control/scenarios`
+
+Every scenario, by name: `[ { "id": "bison-n853", "name": "Bison with N853", "model": { } } ]`.
+Basic Auth with `read` scope.
+
+#### `PUT control/scenarios/{id}`
+
+Saves `{ "name": "…", "model": { } }` under `id`, replacing any scenario with it, and returns it. The
+`id` is lower-case letters and digits joined by single dashes. Basic Auth with `write` scope.
 
 ### Finalisation Notifications
 
@@ -225,7 +270,8 @@ Clients and their scopes are configured in `appsettings.json` under the `Acl` se
 
 | Scope   | Grants access to |
 |---------|------------------|
-| `read`  | `GET decision-notifications`, `GET error-notifications` |
+| `read`  | `GET decision-notifications`, `GET error-notifications`, `GET control/clearance-requests`, `GET control/clearance-requests/{mrn}`, `GET control/scenarios` |
+| `write` | `PUT control/scenarios/{id}` |
 
 ## Docker Compose
 

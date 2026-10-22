@@ -9,6 +9,7 @@ namespace Defra.TradeImportsCdsSimulator.Data.Mongo;
 public class MongoCollectionSet<T>(MongoDbContext dbContext, string collectionName = null!) : IMongoCollectionSet<T>
 {
     private readonly List<T> _entitiesToInsert = [];
+    private readonly List<(Expression<Func<T, bool>> Filter, T Item)> _entitiesToReplace = [];
 
     private IQueryable<T> EntityQueryable => Collection.AsQueryable();
 
@@ -28,6 +29,18 @@ public class MongoCollectionSet<T>(MongoDbContext dbContext, string collectionNa
     public async Task Save(CancellationToken cancellationToken)
     {
         await Insert(cancellationToken);
+
+        foreach (var (filter, item) in _entitiesToReplace)
+        {
+            await Collection.ReplaceOneAsync(filter, item, new ReplaceOptions { IsUpsert = true }, cancellationToken);
+        }
+
+        _entitiesToReplace.Clear();
+    }
+
+    public void Replace(Expression<Func<T, bool>> filter, T item)
+    {
+        _entitiesToReplace.Add((filter, item));
     }
 
     private async Task Insert(CancellationToken cancellationToken)

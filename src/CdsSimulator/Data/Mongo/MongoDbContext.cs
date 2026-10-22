@@ -18,6 +18,7 @@ public class MongoDbContext : IDbContext
         ErrorNotifications = new MongoCollectionSet<Notification>(this, nameof(ErrorNotifications));
         FinalisationNotifications = new MongoCollectionSet<Finalisation>(this, nameof(FinalisationNotifications));
         ClearanceRequests = new MongoCollectionSet<ClearanceRequest>(this, nameof(ClearanceRequests));
+        Scenarios = new MongoCollectionSet<Scenario>(this, nameof(Scenarios));
     }
 
     internal IMongoDatabase Database { get; }
@@ -30,6 +31,8 @@ public class MongoDbContext : IDbContext
 
     public IMongoCollectionSet<ClearanceRequest> ClearanceRequests { get; }
 
+    public IMongoCollectionSet<Scenario> Scenarios { get; }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         try
@@ -38,6 +41,7 @@ public class MongoDbContext : IDbContext
             await ErrorNotifications.Save(cancellationToken);
             await FinalisationNotifications.Save(cancellationToken);
             await ClearanceRequests.Save(cancellationToken);
+            await Scenarios.Save(cancellationToken);
         }
         catch (MongoCommandException mongoCommandException) when (mongoCommandException.Code == 112)
         {

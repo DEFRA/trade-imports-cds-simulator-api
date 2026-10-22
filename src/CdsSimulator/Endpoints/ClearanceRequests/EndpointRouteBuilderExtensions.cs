@@ -7,6 +7,7 @@ using Defra.TradeImportsCdsSimulator.Exceptions;
 using Defra.TradeImportsCdsSimulator.Utils;
 using Defra.TradeImportsCdsSimulator.Utils.CorrelationId;
 using Defra.TradeImportsCdsSimulator.Utils.Mrn;
+using Defra.TradeImportsCdsSimulator.Utils.Ucr;
 using MongoDB.Bson;
 using DbEntities = Defra.TradeImportsCdsSimulator.Data.Entities;
 
@@ -84,6 +85,11 @@ public static class EndpointRouteBuilderExtensions
                     $"Entry {request.Header.EntryReference} with version {request.Header.EntryVersionNumber} already exists"
                 );
             }
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Header.DeclarationUcr))
+        {
+            request.Header.DeclarationUcr = DucrGenerator.GenerateDucr(request.Header.DeclarantId);
         }
 
         var clearanceRequest = await SaveClearanceRequest(request, dbContext, cancellationToken);
