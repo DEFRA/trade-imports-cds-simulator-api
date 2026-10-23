@@ -41,7 +41,6 @@ public class MongoDbContext : IDbContext
             await ErrorNotifications.Save(cancellationToken);
             await FinalisationNotifications.Save(cancellationToken);
             await ClearanceRequests.Save(cancellationToken);
-            await Scenarios.Save(cancellationToken);
         }
         catch (MongoCommandException mongoCommandException) when (mongoCommandException.Code == 112)
         {

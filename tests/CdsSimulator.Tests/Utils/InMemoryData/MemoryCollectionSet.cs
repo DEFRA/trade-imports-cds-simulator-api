@@ -25,10 +25,11 @@ public class MemoryCollectionSet<T> : IMongoCollectionSet<T>
 
     public void Insert(T item) => _data.Add(item);
 
-    public void Replace(Expression<Func<T, bool>> filter, T item)
+    public Task Upsert(Expression<Func<T, bool>> filter, T item, CancellationToken cancellationToken)
     {
         _data.RemoveAll(new Predicate<T>(filter.Compile()));
         _data.Add(item);
+        return Task.CompletedTask;
     }
 
     public Task Save(CancellationToken cancellationToken) => Task.CompletedTask;

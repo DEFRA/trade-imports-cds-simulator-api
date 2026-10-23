@@ -9,8 +9,8 @@ public interface IMongoCollectionSet<T> : IQueryable<T>
 
     void Insert(T item);
 
-    // Replaces the item the filter matches, or inserts it if there's none.
-    void Replace(Expression<Func<T, bool>> filter, T item);
+    // Replaces the item the filter matches, or inserts it if there's none. Writes straight away, not on Save.
+    Task Upsert(Expression<Func<T, bool>> filter, T item, CancellationToken cancellationToken);
 
     Task Save(CancellationToken cancellationToken);
 }

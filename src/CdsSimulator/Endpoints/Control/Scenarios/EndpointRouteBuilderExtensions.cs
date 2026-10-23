@@ -67,8 +67,7 @@ public static partial class EndpointRouteBuilderExtensions
             Name = body.Name.Trim(),
             Model = body.Model.GetRawText(),
         };
-        dbContext.Scenarios.Replace(s => s.Id == id, scenario);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.Scenarios.Upsert(s => s.Id == id, scenario, cancellationToken);
 
         return Results.Ok(Response(scenario));
     }
