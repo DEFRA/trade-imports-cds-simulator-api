@@ -15,6 +15,8 @@ public class MemoryDbContext : IDbContext
     public IMongoCollectionSet<Finalisation> FinalisationNotifications { get; } =
         new MemoryCollectionSet<Finalisation>();
 
+    public IMongoCollectionSet<Scenario> Scenarios { get; } = new MemoryCollectionSet<Scenario>();
+
     public Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;

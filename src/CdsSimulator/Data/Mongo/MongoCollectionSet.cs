@@ -30,6 +30,9 @@ public class MongoCollectionSet<T>(MongoDbContext dbContext, string collectionNa
         await Insert(cancellationToken);
     }
 
+    public Task Upsert(Expression<Func<T, bool>> filter, T item, CancellationToken cancellationToken) =>
+        Collection.ReplaceOneAsync(filter, item, new ReplaceOptions { IsUpsert = true }, cancellationToken);
+
     private async Task Insert(CancellationToken cancellationToken)
     {
         if (_entitiesToInsert.Count != 0)

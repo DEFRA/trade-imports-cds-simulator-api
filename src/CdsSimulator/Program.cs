@@ -3,6 +3,8 @@ using Defra.TradeImportsCdsSimulator.Authentication;
 using Defra.TradeImportsCdsSimulator.Data.Extensions;
 using Defra.TradeImportsCdsSimulator.Endpoints;
 using Defra.TradeImportsCdsSimulator.Endpoints.ClearanceRequests;
+using Defra.TradeImportsCdsSimulator.Endpoints.Control.Declarations;
+using Defra.TradeImportsCdsSimulator.Endpoints.Control.Scenarios;
 using Defra.TradeImportsCdsSimulator.Endpoints.Decisions;
 using Defra.TradeImportsCdsSimulator.Endpoints.Finalisations;
 using Defra.TradeImportsCdsSimulator.Endpoints.OutboundErrors;
@@ -92,6 +94,12 @@ static WebApplication BuildWebApplication(WebApplicationBuilder builder)
     app.MapDecisionEndpoints();
     app.MapFinalisationEndpoints();
     app.MapErrorEndpoints();
+
+    // For the simulator's UI, kept apart from the CDS interfaces it simulates.
+    var control = app.MapGroup("control");
+    control.MapDeclarationEndpoints();
+    control.MapScenarioEndpoints();
+
     app.UseExceptionHandler(
         new ExceptionHandlerOptions
         {

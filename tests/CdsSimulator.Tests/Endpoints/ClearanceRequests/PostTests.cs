@@ -99,6 +99,60 @@ public class PostTests(SimulatorWebApplicationFactory factory, ITestOutputHelper
     }
 
     [Fact]
+    public async Task Post_WhenNoDeclarationUcr_ShouldGenerateOneFromTheDeclarant()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "CDS", "destinationSystem": "ALVS" },
+              "header": { "declarantId": "GB999000000001" },
+              "items": [ { "itemNumber": 1 } ]
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PostAsync(
+            Testing.Endpoints.ClearanceRequests.Post,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        await _mockBtms
+            .Received(1)
+            .PostClearanceRequestAsync(
+                Arg.Is<ClearanceRequest>(r =>
+                    r.Header.DeclarationUcr!.StartsWith($"{DateTime.UtcNow.Year % 10}GB999000000001-")
+                ),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task Post_WhenDeclarationUcrGiven_ShouldKeepIt()
+    {
+        var json = """
+            {
+              "serviceHeader": { "sourceSystem": "CDS", "destinationSystem": "ALVS" },
+              "header": { "declarantId": "GB999000000001", "declarationUCR": "1GB116445386000-KDA35932Y1BHX" },
+              "items": [ { "itemNumber": 1 } ]
+            }
+            """;
+
+        var client = CreateClient();
+        var response = await client.PostAsync(
+            Testing.Endpoints.ClearanceRequests.Post,
+            new StringContent(json, Encoding.UTF8, "application/json")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        await _mockBtms
+            .Received(1)
+            .PostClearanceRequestAsync(
+                Arg.Is<ClearanceRequest>(r => r.Header.DeclarationUcr == "1GB116445386000-KDA35932Y1BHX"),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
     public async Task Post_WhenCorrelationIdAlreadySet_ShouldReturnBadRequest()
     {
         var json = """

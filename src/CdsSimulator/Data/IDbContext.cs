@@ -12,5 +12,7 @@ public interface IDbContext
 
     IMongoCollectionSet<Finalisation> FinalisationNotifications { get; }
 
+    IMongoCollectionSet<Scenario> Scenarios { get; }
+
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
